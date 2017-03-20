@@ -1,0 +1,2017 @@
+################################################################################################################
+################## SEGUNDA EXPLORACION DE LOS DATOS  ###########################################################
+################################################################################################################
+#  Una vez que ya hemos hecho una primera exploracion de los datos (para un dia al azar 27/12) vamos
+#  a cargar otro dia diferente, en este caso sabado de fin de semana con bastantes eventos deportivos: 22/01.
+#  porque nos interesa ver si el comportamiento es diferente al del dia 27/12 que era Martes.
+#  Haremos exactamente las mismas operaciones que hicimos para la primera exploracion, aunque ya no es necesario 
+#  hacer una primera evaluacion de la dispersion de las longitudes (se vera en la parte de outliers por longitud).
+#
+#  Este analisis consistira en lo siguiente:
+#       1. Analisis de limpieza:
+#       Lo primero que vamos a hacer es tratar los posibles casos a limpiar:
+#           a. Se analizarán secuencias de 1, 2 o 3 pasos
+#           b. Se analizaran el primer paso de todas las secuencias
+#           c. Se analizarán outliers por longitud de secuencia
+#
+#       2. Analisis de apuestas por longitud.
+#       3. Analisis porcentajes apuestas.
+#       4. Analisis apuestas por deporte.
+#       5. Analisis porcentajes logados/no logados
+#
+#  Hemos utilizado las mismas metricas y KPI's que en la exploracion anterior para poder comparar de forma correcta, y la
+#  misma limpieza. Las conclusiones estaran en cada punto.
+#  Se han visto algunas diferencias importantes entre ambas exploraciones, por lo tanto hemos convenido que lo mas logico 
+#  para definir una muestra representativa seria hacer una comparacion de toda una semana. Porque tenemos la hipotesis que
+#  las semanas se comportan igual entre si (hay una compensacion por calendario), sin embargo los dias de la semana
+#  no tienen porque comportarse igual, sobre todo fin de semana o entre semana. 
+#  Por ello estamos cargando toda una semana en la tabla maestra de eventos. Y paralelamente hemos lanzado la 
+#  primera clusterizacion para este dia (22/01) pues nos parece que tiene un amplisimo abanico de secuencias y posibilidades.
+################################################################################################################
+################################################################################################################
+
+
+# Limpiar workspace
+rm(list=ls())
+setwd("D:/Pedro/Master MBIT/Proyecto Master/PROYECTO CODERE/Exploracion Datos/Data Mining/Exploracion Datos")
+ficheros <- list.files()
+
+is.installed <- function(paquete) is.element (
+  paquete, installed.packages())
+
+if(!is.installed("ggplot2"))
+  install.packages("ggplot2")
+if(!is.installed("gridExtra"))
+  install.packages("gridExtra")
+if(!is.installed("data.table"))
+  install.packages("data.table")
+
+require(ggplot2)
+require(gridExtra)
+require(data.table)
+
+####################################################################################
+#################### CARGA Y TRATAMIENTO DATOS #####################################
+####################################################################################
+load("D:/Pedro/Master MBIT/Proyecto Master/PROYECTO CODERE/Exploracion Datos/Data Mining/Cargas de Datos/secuencias22-01.RData")
+dim(secuencias)
+head(secuencias,10)
+
+#####################################################################################
+########################## EXPLORACION DE LOS DATOS #################################
+#####################################################################################
+# IMP: Para nosotros la accion de apostar estará definida como betCompleted, ya que es la que realmente accarea cash.
+# Un usuario ha podido añadir apuesta(s) mediante las siguientes acciones:
+
+#                action_node action_node_id
+#                     addBet             80
+#  AddBetCombForecastElement             81
+#AddBetDirectForecastElement             82
+#                 addBetHorG             83
+#                 addBetLive             84
+#           addBetRealMadrid             85
+#    AddForecastOrTricastBet             86
+#          addFreeBetsTicket             87
+
+# Y podra tener la intencion de cerrar la apuesta con la accion:
+
+#                action_node action_node_id
+#                   CloseBet            101
+
+# Pero dicha apuesta no estará nunca cerrada hasta que se complete la apuesta por parte del sistema:
+
+#                action_node action_node_id
+#               betCompleted             90
+
+# Han podido producirse errores: 130 - errorMsgTicket o incluso rechazar la apuesta o salir del sistema.
+# Por lo tanto nuestro estado objetivo será betCompleted (90).
+
+
+
+# ------------------------ 1. Analisis de limpieza:------------------------------------
+######## Lo primero que vamos a hacer es tratar los posibles casos a limpiar:
+######## a. Se analizarán secuencias de 1, 2 o 3 pasos
+######## b. Se analizaran el primer paso de todas las secuencias
+######## c. Se analizarán outliers por longitud de secuencia
+
+# Nos quedamos con el tamaño original de secuencias
+tam.secuencias.original<-dim(secuencias)[1]
+tam.secuencias.original
+
+
+
+# --------- 1a y 1b. Analisis secuencias cortas:
+
+# Analizaremos las secuencias de longitud corta en funcion de sus estados iniciales  ya que 
+# hemos visto que tienen un porcentage muy alto con respecto a la muestra
+length(which(secuencias$Longitud<=3))/dim(secuencias)[1]*100 # Casi un 14.6%
+
+
+##### Tratamiento secuencias de 1 solo paso: 
+
+# Hemos visto que existen una gran cantidad de secuencias de un solo paso. Veamos
+# que nos podemos encontrar:
+length(which(secuencias$Longitud==1)) # 2073 son solo de un paso !!!!
+length(which(secuencias$Longitud==1))/dim(secuencias)[1]*100 # Un 7.62% de la muestra
+
+merge(tablaCodificacion,cbind(action_node_id=unique(secuencias[secuencias$Longitud<=1]$Secuencia)),by="action_node_id")
+# 48 posibles entradas de un solo paso:
+# action_node_id                     action_node
+#             1                    AcceptNewOdds
+#             23  AccessFromCarrusel:ContactPage
+#             24 AccessFromCarrusel:DirectosPage
+#             27    AccessFromCarrusel:SlotsPage
+#             29               AccessLocalCodere
+#             38                  AccessToCasino
+#             64          AccessToRealMadridPage
+#             67      AccessToRegisterFromButton
+#             70                   AccessToSlots
+#             71                  AccessToTicket
+#             73              AccessToViewTicket
+#             75                 AccesToFreeBets
+#             78            ActivateDesStreaming
+#             80                          addBet
+#             84                      addBetLive
+#             85                addBetRealMadrid
+#             88                    attemptLogin
+#             98                   ChangeTypeBet
+#            100                     CleanTicket
+#            102                 ContinueBetting
+#            108       DirectAccessEvent: soccer
+#            109      DirectAccessEvent: UNKNOWN
+#            123             EarlyCashOutAbility
+#            130                  errorMsgTicket
+#            135     Go to: AccessOnlineDeposits
+#            136       Go to: AccessToBetHistory
+#            149    Go to: ChangeSportInLivePage
+#            153    Go to: DeleteElementOfTicket
+#            162             Go to: GoToLivePage
+#            165             Go to: goToRegister
+#            169                 Go to: LoadPage
+#            174            Go to: OpenSportMenu
+#            177           Go to: RedirectDevice
+#            183                   goToIndexPage
+#            187                    loadHomePage
+#            197                  RefreshBalance
+#            201         SelectEvent: basketball
+#            210             SelectEvent: soccer
+#            218     SelectEventLive: basketball
+#            223         SelectEventLive: soccer
+#            252            SelectMarket: soccer
+#            261           SelectSport: handball
+#            257         SelectSport: basketball
+#            266             SelectSport: soccer
+#            290             VinculateCodereCard
+#            298            SelectEvent: UNKNOWN
+
+
+# Recogemos todos las secuencias de un solo paso, para hacer un histograma
+# y poder ver cuales son mas frecuentes
+secuencias1SoloPaso <- data.frame(matrix(unlist(secuencias[secuencias$Longitud<=1]$Secuencia), byrow=T))
+colnames(secuencias1SoloPaso)<-c("Secuencia")
+length(secuencias1SoloPaso$Secuencia) # 2073 secuencias de un solo paso
+
+sort(table(secuencias1SoloPaso$Secuencia), decreasing = TRUE)
+# Vemos que las mas frecuentes son: 
+#            187                    loadHomePage --> 1507 Apariciones
+#            165             Go to: goToRegister --> 246 Apariciones
+#             67      AccessToRegisterFromButton --> 95 Apariciones
+#            149    Go to: ChangeSportInLivePage --> 36 Apariciones
+#            183                   goToIndexPage --> 25 Apariciones
+#             29               AccessLocalCodere --> 22 Apariciones
+#            136       Go to: AccessToBetHistory --> 18 Apariciones
+
+# La gran mayoria de los estados iniciales de secuencias de un paso corresponden a accesos a la pagina principal
+# en concreto casi el 89% de los primeros pasos son a la pagina principal o al registro.
+length(secuencias1SoloPaso[secuencias1SoloPaso$Secuencia %in% c(187,165,67),])/dim(secuencias1SoloPaso)[1]*100 #89.14
+
+
+# Representamos en un grafico de barras
+c <- ggplot(secuencias1SoloPaso, aes(factor(Secuencia))) + labs(title="Acc.Iniciales Secuencias 1 solo paso", x="Acciones", y = "Apariciones")
+c + geom_bar(fill="steelblue") + coord_flip() 
+
+
+
+c <- ggplot(secuencias1SoloPaso, aes(factor(Secuencia), fill=factor(Secuencia))) + labs(title="Acc.Iniciales Secuencias 1 solo paso", x="Acciones", y = "Apariciones")
+c + geom_bar() + coord_flip() + scale_fill_discrete("Acciones", 
+                                                    breaks=unlist(unique(secuencias1SoloPaso$Secuencia)),
+                                                    labels=unlist(unique(secuencias1SoloPaso$Secuencia)))
+
+
+# Vamos a agrupar todas las que tienen pocas apariciones en un mismo grupo
+secuencias1SoloPaso$Grupo <- unlist(lapply(secuencias1SoloPaso$Secuencia,
+                                           function(x)
+                                             if(table(secuencias1SoloPaso$Secuencia)[toString(x)] > 7)
+                                               return(x)
+                                           else
+                                             return("Menos comunes")))
+
+c <- ggplot(secuencias1SoloPaso, aes(factor(Grupo), fill=factor(Secuencia))) + labs(title="Acc.Iniciales Secuencias 1 solo paso", x="Acciones", y = "Apariciones")
+c + geom_bar() + coord_flip() + scale_fill_discrete("Acciones menos comunes", 
+                                                    breaks=unlist(unique(secuencias1SoloPaso[secuencias1SoloPaso$Grupo=="Menos comunes",]$Secuencia)),
+                                                    labels=unlist(unique(secuencias1SoloPaso[secuencias1SoloPaso$Grupo=="Menos comunes",]$Secuencia)))
+
+# Vemos porcentajes con respecto al total de la muestra:
+length(which(secuencias1SoloPaso$Grupo=="Menos comunes"))/dim(secuencias)[1]*100 # 0.28%
+length(secuencias1SoloPaso$Secuencia)/dim(secuencias)[1]*100 # 7.62%
+
+
+###CONCLUSION: La realidad es que el 7.62% de las secuencias solo tienen un paso. De las cuales un 0.28% son muy poco comunes. 
+# Estas ultimas, que se pueden eliminar perfectamente de la muestra, no son casos representativos generan ruido porque son probablemente errores de acceso.
+# La cuestion es que hacer con los mas comunes (187, 165, 67) que son accesos al Home o al registro que luego se van de la pagina.
+# En nuestro caso vamos a tomar la misma decision (quitarlos de la muestra) puesto que para nosotros no suponen un patron de comportamiento,
+# puesto que no podemos realmente distinguir los usuarios de codere y los que han sido errores.
+# Por lo tanto vamos a considerar como casos no interesantes para el estudio todas las secuencias de un solo paso: 7.62% de la muestra.
+secuenciasLimpias<-secuencias[secuencias$Longitud>1,]
+# Comprobamos que hemos borrado correctamente
+dim(secuenciasLimpias)[1]+2073 == dim(secuencias)[1]
+
+##### FIN Tratamiento secuencias de 1 solo paso.
+
+
+
+##### Tratamiento secuencias por primer paso de la secuencia
+
+# Una vez que tenemos eliminadas las secuencias de un solo paso que consideramos ruido
+# vamos a ver de todas las secuencias cuales son los estados iniciales mas comunes:
+
+# IMP: Aqui ya trabajamos con la variable 'secuenciasLimpias'
+dim(secuenciasLimpias)[1] # 25118
+
+# Cogemos la primera accion de todas las secuencias y miramos sus frecuencias
+secuencias_firstAction<-lapply(secuenciasLimpias$Secuencia, function(l) l[[1]])
+tabla_frecuencias_firstAction<-sort(table(unlist(secuencias_firstAction)),decreasing = TRUE)
+tabla_frecuencias_firstAction
+
+# Los mas comunes son:
+#   187    88    67   174   136   149   183   197    70   160   165   223   177    84    80
+# 21482   594   481   367   361   272   270   171    78    68    68    67    62    59    54
+
+#   210   102   122   266   218    26    24   252    11   120   190    29    71   224    73 
+#    53    52    33    32    31    30    26    25    22    21    15    14    14    13    12  15     14    12    12    11
+
+# Y hay bastantes poco comunes:
+#   138   155   176   245   261   263    10    12    48    51    55    64    75    91   105 
+#     2     2     2     2     2     2     1     1     1     1     1     1     1     1     1 
+
+#   107   137   141   145   159   166   169   185   198   206   212   220   221   238   262 
+#     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1 
+
+#   277   281   287   299   306   331 
+#     1     1     1     1     1     1 
+
+# Los vemos por descripcion
+df_secuencias_firstActions<-data.frame(primeraAccion=matrix(as.numeric(row.names(tabla_frecuencias_firstAction)), byrow = T), apariciones=matrix(unlist(tabla_frecuencias_firstAction), byrow = T))
+df_secuencias_firstActions$primeraAccionName<-lapply(df_secuencias_firstActions$primeraAccion, function(x) return(toString(tablaCodificacion[tablaCodificacion$action_node_id==x,]$action_node)))
+df_secuencias_firstActions
+# Tendriamos 111 posibles estados iniciales
+#    primeraAccion apariciones                            primeraAccionName
+#1             187       21482                                 loadHomePage
+#2              88         594                                 attemptLogin
+#3              67         481                   AccessToRegisterFromButton
+#4             174         367                         Go to: OpenSportMenu
+#5             136         361                    Go to: AccessToBetHistory
+#6             149         272                 Go to: ChangeSportInLivePage
+#7             183         270                                goToIndexPage
+#8             197         171                               RefreshBalance
+#9              70          78                                AccessToSlots
+#10            160          68                      Go to: Fútbol_Destacado
+#11            165          68                          Go to: goToRegister
+#12            223          67                      SelectEventLive: soccer
+#13            177          62                        Go to: RedirectDevice
+#14             84          59                                   addBetLive
+#15             80          54                                       addBet
+#16            210          53                          SelectEvent: soccer
+#17            102          52                              ContinueBetting
+#18            122          33                                     Directos
+#19            266          32                          SelectSport: soccer
+#20            218          31                  SelectEventLive: basketball
+#21             26          30           AccessFromCarrusel:misApuestasPage
+#22             24          26              AccessFromCarrusel:DirectosPage
+#23            252          25                         SelectMarket: soccer
+#24             11          22                   AccessFromCarrusel: soccer
+#25            120          21                   DirectAccessLeague: soccer
+#26            190          15                                       LogOut
+#27             29          14                            AccessLocalCodere
+#28             71          14                               AccessToTicket
+#29            224          13                      SelectEventLive: tennis
+#30             73          12                           AccessToViewTicket
+#31            354          12                       Go to: Tenis_Destacado
+#32             60          10                        AccessToNBAEventoPage
+#33            153           9                 Go to: DeleteElementOfTicket
+#34            201           9                      SelectEvent: basketball
+#35             38           8                               AccessToCasino
+#36            286           8             SelectSportFromSportmenu: soccer
+#37             78           7                         ActivateDesStreaming
+#38             96           7                           ChangeAmountTicket
+#39            121           7                   DirectAccessLeague: tennis
+#40            123           7                          EarlyCashOutAbility
+#41            142           7                            Go to: Baloncesto
+#42            298           7                         SelectEvent: UNKNOWN
+#43             50           6                        AccessToGameSlots: pc
+#44            101           6                                     CloseBet
+#45            129           6                        EarlyCashOutNoAbility
+#46            133           6                              FinishRegister?
+#47            135           6                  Go to: AccessOnlineDeposits
+#48            175           6                          Go to: OpenUserMenu
+#49            247           6                     SelectMarket: basketball
+#50            109           5                   DirectAccessEvent: UNKNOWN
+#51            124           5                             EarlyCashOutCall
+#52            257           5                      SelectSport: basketball
+#53            267           5                          SelectSport: tennis
+#54              3           4                            AccessExtLivePage
+#55             98           4                                ChangeTypeBet
+#56            100           4                                  CleanTicket
+#57            108           4                    DirectAccessEvent: soccer
+#58            162           4                          Go to: GoToLivePage
+#59            180           4                                 Go to: Tenis
+#60            189           4                                      LoginOK
+#61            253           4                         SelectMarket: tennis
+#62            289           4                                startSearched
+#63             23           3               AccessFromCarrusel:ContactPage
+#64             90           3                                 betCompleted
+#65            116           3               DirectAccessLeague: basketball
+#66            139           3                Go to: AccessToOnlinePayments
+#67            143           3                  Go to: Baloncesto_Destacado
+#68            144           3                             Go to: Balonmano
+#69            161           3                        Go to: GoToHorsesPage
+#70              1           2                                AcceptNewOdds
+#71             17           2            AccessFromCarrusel:btnIdIcoFutbol
+#72             27           2                 AccessFromCarrusel:SlotsPage
+#73             28           2          AccessFromCarrusel:UltimoMinutoPage
+#74             49           2                     AccessToGameSlots: movil
+#75             85           2                             addBetRealMadrid
+#76            138           2                    Go to: AccessToLastMinute
+#77            155           2                               Go to: eSports
+#78            176           2                              Go to: Política
+#79            245           2              SelectMarket: american_football
+#80            261           2                        SelectSport: handball
+#81            263           2                      SelectSport: ice_hockey
+#82             10           1               AccessFromCarrusel: basketball
+#83             12           1                   AccessFromCarrusel: tennis
+#84             48           1                       AccessToGameCasino: pc
+#85             51           1                              accessToGetCard
+#86             55           1                        AccessToLocalDeposits
+#87             64           1                       AccessToRealMadridPage
+#88             75           1                              AccesToFreeBets
+#89             91           1                                CallMe Paso 1
+#90            105           1                             DepositPaymentOK
+#91            107           1                DirectAccessEvent: basketball
+#92            137           1                     Go to: AccessToDemoSlots
+#93            141           1                 Go to: Artes Marciales (UFC)
+#94            145           1                   Go to: Balonmano_Destacado
+#95            159           1 Go to: Fútbol americano NFL / NCAA_Destacado
+#96            166           1                    Go to: Hockey sobre hielo
+#97            169           1                              Go to: LoadPage
+#98            185           1                              InsertAmountAut
+#99            198           1               SelectEvent: american_football
+#100           206           1                      SelectEvent: ice_hockey
+#101           212           1                      SelectEvent: volleyball
+#102           220           1                    SelectEventLive: handball
+#103           221           1                  SelectEventLive: ice_hockey
+#104           238           1                     SelectLeaguePage: Fútbol
+#105           262           1                    SelectSport: horse_racing
+#106           277           1         SelectSportFromSportmenu: basketball
+#107           281           1           SelectSportFromSportmenu: handball
+#108           287           1             SelectSportFromSportmenu: tennis
+#109           299           1         SelectEventLive: defaultSportHandler
+#110           306           1                    AccessFromBanner: UNKNOWN
+#111           331           1                       SelectMarket: politica
+
+# Comprobamos que el calculo es correcto
+sum(df_secuencias_firstActions$apariciones)==dim(secuenciasLimpias)[1]
+
+# Observamos que hay una gran mayoria de secuencias que acceden por la pagina de LoadHome o de registro:
+sum(df_secuencias_firstActions[df_secuencias_firstActions$primeraAccion %in% c(187,165,88,67,183),]$apariciones)/dim(secuenciasLimpias)[1]*100 #91.14
+# Casi un 91% de los usuarios acceden por el LoadHome (o por el registro).
+
+# Pero tambien vemos que con alguna frecuencia hay usuarios que acceden a paginas directamente, sin pasar por el LoadHome:
+# Como por ejemplo: AccessToBetHistory, RefreshBalance, ChangeSportInLivePage, Directos o soccer.
+sum(df_secuencias_firstActions[df_secuencias_firstActions$primeraAccion %in% c(197,136,149,223,122),]$apariciones)/dim(secuenciasLimpias)[1]*100 #3.59%
+# Pero realmente son un 3.5% de la muestra
+
+# Y otros muchos accesos y eventos muchisimos menos frecuentes, de los cuales algunos de ellos no tienen ni sentido de negocio:
+#     primeraAccion apariciones                            primeraAccionName
+# 13             80          54                                       addBet
+# 19             84          59                                   addBetLive
+# 20            102          52                              ContinueBetting
+# 34            190          15                                       LogOut
+# 36            101           6                                     CloseBet
+# 38            100           4                                  CleanTicket
+# 51             85           2                             addBetRealMadrid
+# 52             96           3                           ChangeAmountTicket
+# 61             83           2                                   addBetHorG
+# 62             90           2                                 betCompleted
+# 63             98           4                                ChangeTypeBet
+# 86             95           1                         cancelFreeBetsTicket
+# 91            130           1                               errorMsgTicket
+# 88            105           1                             DepositPaymentOK
+# 100           185           1                              InsertAmountAut
+
+# Esto es posible por 2 situaciones:
+# a) La sesion caduca en medio de una navegacion por un timeout y se le aplica otra.
+# b) Trazas cortadas o no correctas en su volcado a logs.
+
+# En cualquier caso no definen un comportamiento de un usuario sino de una accion que se ha quedado a medias.
+sum(df_secuencias_firstActions[df_secuencias_firstActions$primeraAccion %in% c(80,84,102,190,101,100,85,96,83,90,98,95,130,103,105,185),]$apariciones)/dim(secuenciasLimpias)[1]*100 #0.82%
+# Estos casos suponen un 1% de la muestra actual y deben ser eliminadas.
+
+# El resto aunque menos frecuentes, son comportamientos validos de navegacion, que aunque haya quedado a medias la navegacion como tal
+# inducen a un comportamiento distinto. Es decir es probable que el usuario o ha accedido directamente a esa pagina/opcion o bien
+# transcurrido un tiempo ha decidido hacer otra navegacion diferente a la anterior y por lo tanto otro patron diferente de comportamiento.
+
+
+
+# Representamos:
+c <- ggplot(df_secuencias_firstActions, aes(factor(primeraAccion, levels = primeraAccion[order(apariciones)]),apariciones)) + labs(title="1er paso todas las secuencias", x="Acciones", y = "Apariciones")
+c + geom_bar(stat="identity",fill="steelblue") + coord_flip() 
+# No se ve nada
+
+# Intentamos representar las mas comunes
+c <- ggplot(df_secuencias_firstActions[1:20,], aes(factor(primeraAccion,levels = primeraAccion[order(apariciones)]),apariciones, fill=factor(primeraAccion))) + labs(title="1er paso todas las secuencias (Mas comunes)", x="Acciones", y = "Apariciones")
+c + geom_bar(stat="identity") + coord_flip() + scale_fill_discrete("Acciones", 
+                                                                   breaks=unlist(unique(df_secuencias_firstActions[1:20,]$primeraAccion)),
+                                                                   labels=unlist(unique(df_secuencias_firstActions[1:20,]$primeraAccion)))
+
+# Vamos a agrupar para verlo mejor:
+df_secuencias_firstActions$Grupo <- unlist(lapply(df_secuencias_firstActions$primeraAccion,
+                                                  function(x)
+                                                    if(df_secuencias_firstActions[df_secuencias_firstActions$primeraAccion==x,]$apariciones > 30)
+                                                      return(x)
+                                                  else
+                                                    return("Menos comunes")))
+
+c <- ggplot(df_secuencias_firstActions, aes(factor(unlist(Grupo),levels = unique(Grupo[order(apariciones)])),apariciones, fill=factor(primeraAccion))) + labs(title="1er paso todas las secuencias", x="Acciones", y = "Apariciones")
+c + geom_bar(stat="identity") + coord_flip() + scale_fill_discrete("Acciones menos comunes", 
+                                                                   breaks=unlist(unique(df_secuencias_firstActions[df_secuencias_firstActions$Grupo=="Menos comunes",]$primeraAccion)),
+                                                                   labels=unlist(unique(df_secuencias_firstActions[df_secuencias_firstActions$Grupo=="Menos comunes",]$primeraAccion)))
+
+# Se puede mejorar el grafico pero vemos la alta probabilidad del evento 187 frente al resto.
+
+#### CONCLUSION:
+# Aproximadamente el 91% de la muestra tienen como primer paso una accion sobre el LoadHome (o con el registro), mas del 3% tienen como primer paso otra pagina diferente al loadHome (AccessToBetHistory, RefreshBalance, ChangeSportInLivePage, Directos o soccer),
+# y casi un 1% son operaciones poco frecuentes, algunas de ellas sin sentido de negocio.
+# Por ello vamos a identificar todas las acciones que no se pueden cortar en medio de un comportamiento 
+# y que por lo tanto no pueden ser comienzo de una secuencia:
+
+# tablaCodificacion
+#     action_node               action_node_id
+#              80                       addBet
+#              81    AddBetCombForecastElement
+#              82  AddBetDirectForecastElement
+#              83                   addBetHorG
+#              84                   addBetLive
+#              85             addBetRealMadrid
+#              86      AddForecastOrTricastBet
+#              87            addFreeBetsTicket
+#              90                 betCompleted
+#              93  cancelCobOnlineFromDeposits
+#              94      cancelCobOnlineFromMenu
+#              95         cancelFreeBetsTicket
+#              96           ChangeAmountTicket
+#              97          changePinCodereCard
+#              98                ChangeTypeBet
+#              99           checkFreeBetTicket
+#             100                  CleanTicket
+#             101                     CloseBet
+#             102              ContinueBetting
+#             103           CreateLocalPayment
+#             104                DepositOnline
+#             105             DepositPaymentOK
+#             130               errorMsgTicket
+#             185              InsertAmountAut
+#             186         InsertAmountAutLocal
+#             190                       LogOut
+
+
+# Que seguramente se deban a que la traza se ha cortado o se ha volcado mal o bien a que ha habido un timeout en la sesion y se ha adjudicado otra, pero
+# independientemente del motivo no empiezan un comportamiento nuevo, un patron nuevo, por lo tanto generan ruido => Han de eliminarse de la muestra 
+acciones.eliminar <- c(c(80:87),c(90,93:99),c(100:105),130,185,186,190)
+
+# Antes de eliminarlas observamos de que tipo son...
+pos.eliminar <- which(secuencias_firstAction %in% acciones.eliminar)
+mean(secuenciasLimpias[pos.eliminar,]$Longitud)
+boxplot(secuenciasLimpias[pos.eliminar,]$Longitud) 
+# Son longitudes de secuencias mas altas que la media. 
+
+
+# Eliminamos de cualquier forma estas secuencias sin sentido de negocio
+secuenciasLimpias <- secuenciasLimpias[which(!secuencias_firstAction %in% acciones.eliminar),]
+dim(secuenciasLimpias)[1]#24910
+
+# Comprobamos que la eliminacion se hace correctamente:
+acciones.eliminar %in% lapply(secuenciasLimpias$Secuencia, function(l) l[[1]])
+
+# Se han eliminado otro 0.76% con respecto a la muestra original
+length(pos.eliminar)/dim(secuencias)[1]*100
+
+##### FIN Tratamiento secuencias por primer paso de la secuencia
+
+
+##### Tratamiento de secuencias de 2 o 3 pasos
+
+# Una vez que se han descartado:
+# a) El 7.62% de la muestra original por ser de longitud 1.
+# b) El 0.76% de la muestra original puesto que su inicio de secuencia no tiene sentido de negocio
+# Debemos ver como quedan las secuencias de tamaño 2 y 3 que tenemos bastantes.
+
+# Comparamos las de la muestra original con las de la muestra limpia
+length(which(secuencias$Longitud==3)) # 1123 son de 3 pasos
+length(which(secuencias$Longitud==2)) # 798 son de 2 pasos
+
+length(which(secuenciasLimpias$Longitud==3)) # 1119 son de 3 pasos
+length(which(secuenciasLimpias$Longitud==2)) # 791 son de 2 pasos
+# Hemos quitado algunas pero no muchas. Un total de 11.
+
+# Revisamos las combinaciones de 2 pasos
+combinaciones2pasos <- function(df_secuencias) {
+  secuencias2Pasos <- data.frame(matrix(df_secuencias[df_secuencias$Longitud==2,]$Secuencia, byrow=T))
+  colnames(secuencias2Pasos)<-c("Secuencia")
+  
+  secuencias2Pasos$strSecuencia <- lapply(secuencias2Pasos$Secuencia,function(x)toString(x))
+  list_combinaciones<-sort(table(unlist(secuencias2Pasos$strSecuencia)),decreasing = TRUE)
+  
+  secuencias2Pasos$primerPaso<- unlist(lapply(secuencias2Pasos$Secuencia, function(l) l[1]))
+  secuencias2Pasos$segundoPaso<- unlist(lapply(secuencias2Pasos$Secuencia, function(l) l[2]))
+  tabla_frecuencias<-table(secuencias2Pasos$primerPaso,secuencias2Pasos$segundoPaso)
+  
+  
+  return(list(strSecuencias=secuencias2Pasos$strSecuencia,list_combinaciones=list_combinaciones,tabla_frecuencias=tabla_frecuencias))
+}
+
+# Calculamos las combinaciones y sus frecuencias de 2 pasos. Tanto para la muestra limpia como la total
+secuenciasLimpias2Pasos<-combinaciones2pasos(secuenciasLimpias)
+secuenciasLimpias2Pasos$list_combinaciones
+secuenciasLimpias2Pasos$tabla_frecuencias
+
+secuencias2Pasos<-combinaciones2pasos(secuencias)
+secuencias2Pasos$list_combinaciones
+secuencias2Pasos$tabla_frecuencias
+
+lattice::levelplot(secuencias2Pasos$tabla_frecuencias , col.regions = heat.colors(100)[length(heat.colors(100)):1] ,aspect="fill",
+                   main=list(label="Correlacion de pasos",cex=0.75),
+                   xlab=list(label="Primer paso", cex=0.75),
+                   ylab=list(label="Segundo paso",cex=0.75),
+                   scales=list(cex=0.5))
+
+# Vemos que la mayoria de las combinaciones empiezan por 187(loadHomePage), y en menor medida 165(registro), 70(Acceso a Slots) y 88(intento de login).
+# Pero luego existen muchas combinaciones muy poco frecuentes.
+
+# Vemos las combinaciones que nos hemos quitado con los tratamientos anteriores
+unlist(setdiff(secuencias2Pasos$strSecuencia,secuenciasLimpias2Pasos$strSecuencia))
+#[1] "102, 84"  "190, 183" "102, 190" "190, 187" "96, 100"  "102, 266"
+# Todas ellas por ser combinaciones que empiezan en un estado que no tiene sentido de negocio: (102 - ContinueBetting), (190 - LogOut), (96 - ChangeAmountTicket)
+
+
+# Revisamos las combinaciones de 3 pasos
+combinaciones3pasos <- function(df_secuencias) {
+  secuencias3Pasos <- data.frame(matrix(df_secuencias[df_secuencias$Longitud==3,]$Secuencia, byrow=T))
+  colnames(secuencias3Pasos)<-c("Secuencia")
+  
+  secuencias3Pasos$strSecuencia <- lapply(secuencias3Pasos$Secuencia,function(x)toString(x))
+  list_combinaciones<-sort(table(unlist(secuencias3Pasos$strSecuencia)),decreasing = TRUE)
+  
+  secuencias3Pasos$primerPaso<- unlist(lapply(secuencias3Pasos$Secuencia, function(l) l[1]))
+  secuencias3Pasos$segundoPaso<- unlist(lapply(secuencias3Pasos$Secuencia, function(l) l[2]))
+  secuencias3Pasos$tercerPaso<- unlist(lapply(secuencias3Pasos$Secuencia, function(l) l[3]))
+  tabla_frecuencias<-table(secuencias3Pasos$primerPaso,secuencias3Pasos$segundoPaso,secuencias3Pasos$tercerPaso)
+  
+  
+  return(list(strSecuencias=secuencias3Pasos$strSecuencia,list_combinaciones=list_combinaciones,tabla_frecuencias=tabla_frecuencias))
+}
+
+secuenciasLimpias3Pasos<-combinaciones3pasos(secuenciasLimpias)
+secuenciasLimpias3Pasos$list_combinaciones
+secuenciasLimpias3Pasos$tabla_frecuencias
+
+secuencias3Pasos<-combinaciones3pasos(secuencias)
+secuencias3Pasos$list_combinaciones
+secuencias3Pasos$tabla_frecuencias
+
+unlist(setdiff(secuencias3Pasos$strSecuencia,secuenciasLimpias3Pasos$strSecuencia))
+# [1] "98, 136, 98"   "102, 174, 183" "102, 197, 183" "84, 71, 96"
+
+# Vuelve a pasar lo mismo, ahora la gran mayoria de las combinaciones empiezan en 187(loadhome) y luego
+# hay muchas combinaciones muy poco frecuentes.
+# Lo que si observamos es que hemos quitado 4 combinaciones que no tenian sentido de negocio.
+
+
+#### CONCLUSION: 
+# La gran mayoria de las combinaciones de 2 o 3 pasos empiezan por el LoadHome: 187.
+# Y luego existen muchisimas combinaciones de frecuencias muy bajas. Esto pasará con todas las longitudes en general.
+# Se podrian eliminar estas combinaciones de frecuencia tan baja, pero la realidad es que tienen sentido de negocio y como tal es
+# un comportamiento valido que ira a uno u otro cluster y que por su baja frecuencia no distorsionará demasiado el modelo de clusterizacion.
+# Por ello decidimos no quitarlas.
+
+##### FIN Tratamiento de secuencias de 2 o 3 pasos
+
+
+
+# --------- 1c. Analisis outliers por longitud:
+# Una vez que hemos limpiado las secuencias de longitud 1 y las secuencias cuyo primer paso no es logico en cuanto a negocio, 
+# actualizamos nuestro dataset de secuencias y analizamos la dispersion de longitudes en busca de outliers.
+secuencias <- as.data.table(secuenciasLimpias) 
+
+
+######### Dispersion Longitudes:
+
+# Longitud media de secuencias
+mean(secuencias$Longitud) # 45.32983
+
+summary(secuencias$Longitud)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 2.00    8.00   20.00   45.33   50.00 5354.00
+
+boxplot(secuencias$Longitud) # Media clara en 20 y los quantiles definidos entre 8 y 50
+
+# De los cuales:
+length(which(secuencias$Longitud>50)) # 6190 son superiores a 50 pasos 
+length(which(secuencias$Longitud<8)) # 6015 son inferiores a 8 pasos
+# En forma mas extrema si consideramos 2 o 3 pasos poco significativos y mas de 800 poco significativos:
+length(which(secuencias$Longitud>=800)) # 53 son superiores a 799 pasos 
+length(which(secuencias$Longitud<=3)) # 1910 son inferiores a 3 pasos
+
+###CONCLUSION: Existen muchisimos outlayers superiores que es necesario tratarlos
+# Hasta un 1% podemos eliminar de la muestra: nos focalizamos en secuencias largas puesto que las cortas ya las hemos tratado.
+
+## Calculamos el número de secuencias atípicas que hay en función de la longitud
+# Para ello calculamos los bigotes del boxplot (1.5 * RIC):
+# Restamos al 1º cuartil ly sumamos al 3º 1.5 veces el RIC
+maxi <- quantile(secuencias$Longitud,.75)+1.5*IQR(secuencias$Longitud)
+mini <- quantile(secuencias$Longitud,.25)-1.5*IQR(secuencias$Longitud)
+maxi # 113 Parece a priori un valor demasiado bajo de longitud
+mini # -55 Era de suponer que no hubiese secuencias atípìcas por debajo al tener una
+# distribución normal tan desplazada a la izquierda. El valor debe tomarse como cero 
+# ya que no existen secuencias con longitudes negativas
+
+# Calculamos el número de secuencias que hay fuera de ese 1.5 * RIC
+atip <-length(secuencias$Longitud[secuencias$Longitud>maxi])
+atip #2108 secuencias
+
+# Calculamos el porcentaje de secuencias atípicas
+(atip/nrow(secuencias)) * 100 # 8.46% Es un valor muy alto de secuencias a borrar.
+
+# Probamos con varios valores de multiplicación del RIC hasta llegar a un porcentaje 
+# de secuencias inferior al 1% -> encontramos que ese valor es 8
+maxi <- quantile(secuencias$Longitud,.75)+8*IQR(secuencias$Longitud)
+maxi # 386 pasos
+atip <-length(secuencias$Longitud[secuencias$Longitud>maxi])
+atip # 245 secuencias
+(atip/nrow(secuencias)) * 100 # 0.98% de secuencias
+
+### CONCLUSION: Tras analizar la distribución que siguen las longitudes de secuencias se observa
+# que sigue una normal muy desplazada hacia la izquierda debido a la gran cantidad de secuencias 
+# que tienen pocos pasos. 
+# Si cogemos como atípicos los valores que se encuentran fuera del el 1.5 del RIC nos damos
+# cuenta de que hay 2108 secuencias de más de 113 pasos a eliminar, un 8.5% de la muestra.
+# Si lo que queremos es solo eliminar hasta un 1% de la muestra tenemos que ir hasta los valores 
+# que se encuentran fuera del 8 del RIC: 245 secuencias de más de 386 pasos, 0.98% de la muestra.
+
+secuencias<-secuencias[secuencias$Longitud<386,]
+# Comprobamos que % de la muestra se ha eliminado
+print(paste("Secuencias limpias: queda un ",(dim(secuencias)[1]/tam.secuencias.original*100),"%")) #90.71 %
+
+# ------------------------ FIN Analisis de limpieza:------------------------------------
+
+
+
+
+# ------------------ 2. Analisis de apuestas por longitud:------------------------------
+########Tabla de frecuencias segun Longitud
+
+secuencias0BetCompleted <- secuencias[BetCompleted==0,,]
+secuencias1BetCompleted <- secuencias[BetCompleted==1,,]
+
+# Aprovechamos la función histograma para partir los datos según la longitud de la navegación
+# Usuarios Sin apuestas:
+histSin <- hist(secuencias0BetCompleted$Longitud, 
+                breaks=c(min(secuencias0BetCompleted$Longitud), 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, max(secuencias0BetCompleted$Longitud)))
+frecsSin<-data.frame(histSin$breaks[-1], histSin$counts)
+colnames(frecsSin) <- c("rango", "counts")
+frecsSin<-frecsSin[order(-frecsSin$counts),]
+frecsSin
+
+# Frecuencia absoluta, absoluta acumulada, relativa y relativa acumulada
+transform(frecsSin,                                     # la tabla de frecuencias absolutas
+          FrecAcum=cumsum(counts),                      # frecuencias absolutas acumuladas
+          FrecRel = round(prop.table(counts),2),          # frecuencias relativas
+          FrecAcum = cumsum(round(prop.table(counts),2))) # frecuencias relativas acumuladas
+
+# Usuarios con una apuesta:
+histCon <- hist(secuencias1BetCompleted$Longitud, 
+                breaks=c(min(secuencias1BetCompleted$Longitud), 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, max(secuencias1BetCompleted$Longitud)))
+frecsCon<-data.frame(histCon$breaks[-1], histCon$counts)
+colnames(frecsCon) <- c("rango", "counts")
+frecsCon<-frecsCon[order(-frecsCon$counts),]
+frecsCon
+
+transform(frecsCon,                                              # la tabla de frecuencias absolutas
+          FrecAcum=cumsum(counts),                               # frecuencias absolutas acumuladas
+          FrecRel = round(prop.table(counts),2),                 # frecuencias relativas
+          FrecAcum = cumsum(round(prop.table(counts),2))) 
+
+###CONCLUSION: 
+# Como podemos ver la mayoria de las secuencias tienen una navegacion relativamente corta: en torno a 20-30 pasos.
+# Lo que si es cierto es que hay una diferencia evidante entra los que apuestan o no. Hay mucho que no apuestan 
+# con navegacion muy pequeña: Por ejemplo gente que solo hace un acceso al LoadHome por equivocacion.
+
+# Y además factorizamos las secuencias según la longitud
+particion <- c(0,20,40,60,80,100, max(secuencias$Longitud))
+secuencias$Grupo <- 
+  cut(secuencias$Longitud, particion)
+boxplot(Longitud ~ Grupo, data=secuencias, horizontal = TRUE, ylim=c(0,100))
+
+
+# Gráficas Apuesta/ No apuesta - Longitud
+# Cálculo del promedio de apuestas por tramo de longitud
+
+# Creamos columna de status
+# Status: Si hay o no BetCompleted. Si lo hay, Status vale 1, en el otro caso vale 0.
+secuencias$Status <- unlist(lapply(1:length(secuencias$Secuencia),
+                                   function(i)
+                                     if(secuencias$BetCompleted[i] == 0)
+                                       return(0)
+                                   else
+                                     return(1)))
+mediasBetCompleted <- 
+  unlist(lapply(levels(factor(secuencias$Grupo)), 
+                function(grupo) 
+                  mean(secuencias[BetCompleted != 0 & 
+                                    Grupo == grupo]$BetCompleted)))
+# ggplot() + geom_line(data = as.data.frame(mediasBetCompleted),aes(x=levels(factor(secuencias$Grupo)), y=mediasBetCompleted))
+
+grafoMultiple <- list(
+  ggplot() + geom_bar(data = secuencias,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)))
+  + xlab("Long. navegación")
+  + ylab("frec absoluta")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")),
+  ggplot() + geom_bar(data = secuencias,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)),
+                      position = "fill")
+  + xlab("Long. navegación")
+  + ylab("proporción")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")))
+
+marrangeGrob(grafoMultiple, nrow=1, ncol = 2, 
+             top = "Proporción BetCompleted según longitud navegación")
+
+
+###CONCLUSION: 
+# Es clarisimo que la longitud incide de forma muy importante para hacer una apuesta. 
+# Cada tramo de longitud va aumentando la relacion de apuesta y no apuesta lo cual se ve perfectamente en el segundo grafico.
+# ------------------ FIN Analisis de apuestas por longitud:------------------------------
+
+
+
+
+
+# ---------------------- 3. Analisis porcentajes apuestas:------------------------------
+
+# Numero de secuencias diferentes
+dim(secuencias)[1]#24665 
+
+# Numero de apuestas
+num_apuestas<-sum(secuencias[secuencias$BetCompleted>=1]$BetCompleted)#16916
+
+# Numero de personas que apuestan
+num_apostantes<-length(secuencias[secuencias$BetCompleted>=1]$BetCompleted)#7978
+
+# Media de apuestas por persona:
+num_apuestas/num_apostantes #2.120331
+
+# Porcentaje apostantes:
+num_apostantes/dim(secuencias)[1]*100 #32.3%
+
+# Numero de personas que NO apuestan
+num_no_apostantes<-length(secuencias[secuencias$BetCompleted==0]$BetCompleted)#16687
+
+# Porcentaje NO apostantes:
+num_no_apostantes/dim(secuencias)[1]*100 #67.65%
+
+#
+#
+# % de apuestas
+#
+# ------------------------------------------------------------------
+#
+# Nombre de la función: mediasBetCompleted
+#
+# Descripción:
+#
+# Devuelve la media de «BetCompleted» que hay en las secuencias que 
+# hay en «seqs». Incluye en el promedio las secuencias en las que
+# no hay «betCompleted».
+#
+# Variables de entrada: 
+#
+# «seqs»: Dataframe o Datatable de secuencias
+#
+# Variable de salida: 
+#
+# Número de «BetCompleted» totales en las secuencias/ Número de secuencias totales
+#
+# Ejemplos de llamada:
+#
+# mediasBetCompleted(secuencias[1,])        # Primera secuencia
+# mediasBetCompleted(secuencias[1:7,])      # Secuencias de 1 a 7
+# mediasBetCompleted(secuencias[c(1,3,7),]) # Secuencias 1, 3 y 7
+# mediasBetCompleted(secuencias)            # Todas las secuencias
+# ---------------------------------------------
+mediasBetCompleted <- function(seqs) {
+  return(round(mean(seqs$BetCompleted) ,2))
+}
+
+# Esta función es como la anterior, pero devuelve el resultado
+# por grupos de longitud de secuencia.
+
+mediasBetCompletedLongitud <- function(seqs) {
+  return(unlist(lapply(levels(factor(seqs[["Grupo"]])), 
+                       function(grupo) 
+                         round(mean(seqs[BetCompleted != 0 & 
+                                           Grupo == grupo]$BetCompleted)
+                               ,2))))
+}
+
+# ------------------------------------------------------------------
+#
+# Nombre de la función: mediaSecuenciasBetCompleted
+#
+# Descripción:
+#
+# Devuelve el promedio de «betCompleted» de las secuencias que contienen 
+# algún «BetCompleted»
+#
+# Variables de entrada: 
+#
+# «seqs»: Dataframe o Datatable de secuencias
+#
+# Variable de salida: 
+#
+# Núm secuencias con algún «BetCompleted» / Núm secuencias totales
+#
+# Ejemplos de llamada:
+#
+# mediaSecuenciasBetCompleted(secuencias[1,])        # Primera secuencia
+# mediaSecuenciasBetCompleted(secuencias[1:7,])      # Secuencias de 1 a 7
+# mediaSecuenciasBetCompleted(secuencias[c(1,3,7),]) # Secuencias 1, 3 y 7
+# mediaSecuenciasBetCompleted(secuencias)            # Todas las secuencias
+# ---------------------------------------------
+mediaSecuenciasBetCompleted <- function(seqs) {
+  return(round(mean(seqs[seqs[["BetCompleted"]]!=0][["BetCompleted"]]), 2))
+}
+
+mediaSecuenciasBetCompleted(secuencias) #2.12
+mediasBetCompleted(secuencias) #0.69
+
+
+####CONCLUSION: 
+# Mas del 30% de la muestra son apostadores, frente al casi el 70% que no lo son.
+# El numero medio de apuestas entre todos los usuarios es de 0.69, si tenemos solo encuenta 
+# los apostantes tenemos un numero medio de 2.12.
+
+
+
+# ------------------- 3a. Relacion entre addBet y betCompleted
+
+#                action_node action_node_id
+#                     addBet             80
+#  AddBetCombForecastElement             81
+#AddBetDirectForecastElement             82
+#                 addBetHorG             83
+#                 addBetLive             84
+#           addBetRealMadrid             85
+#    AddForecastOrTricastBet             86
+#          addFreeBetsTicket             87
+#----
+#               betCompleted             90
+#----
+
+# Numero de personas que añaden apuesta (en total, la completen o no)
+num.total.add<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){(80 %in% x || 81 %in% x || 82 %in% x 
+                                || 83 %in% x || 84 %in% x || 85 %in% x 
+                                || 86 %in% x || 87 %in% x)
+                           })))) 
+num.total.add # 13420
+
+
+
+# Numero de personas que añaden apuesta y la completan
+num.add.completed<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             90 %in% x && 
+                               (80 %in% x || 81 %in% x || 82 %in% x 
+                                || 83 %in% x || 84 %in% x || 85 %in% x 
+                                || 86 %in% x || 87 %in% x)
+                           })))) 
+num.add.completed # 7958
+
+# Por ejemplo:
+secuencias[1,]$Secuencia
+# ... 80(addBet) 210(SelectEvent: soccer) 266(SelectSport: soccer) 210(SelectEvent: soccer) 101(CloseBet)  90(betCompleted) 102 190 183
+
+
+
+
+# Numero de personas que añaden apuesta y luego NO completan la apuesta
+num.add.non.completed<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             !(90 %in% x) && 
+                               (80 %in% x || 81 %in% x || 82 %in% x 
+                                || 83 %in% x || 84 %in% x || 85 %in% x 
+                                || 86 %in% x || 87 %in% x)
+                           })))) 
+num.add.non.completed # 5462
+
+# Por ejemplo:
+secuencias[7,]$Secuencia
+# 187 136 129 136 129 136 129 136 183  24 149  84(addBetLive) 223(SelectEventLive: soccer)
+
+
+# Numero de personas que completan una apuesta sin haberla abierto:
+length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             90 %in% x && 
+                               (!(80 %in% x) && !(81 %in% x) && !(82 %in% x) 
+                                && !(83 %in% x) && !(84 %in% x) && !(85 %in% x) 
+                                && !(86 %in% x) && !(87 %in% x))
+                           })))) #  20
+# Por ejemplo:
+secuencias[54,]$Secuencia
+# 187(loadHomePage)  88(attemptLogin) 189(LoginOK)  71(AccessToTicket)  1(AcceptNewOdds) 101(CloseBet) 130(errorMsgTicket) 101(CloseBet)  90(betCompleted)
+
+secuencias[1392,]$Secuencia
+# 187(loadHomePage)  88(attemptLogin) 188(LoginKO)  88(attemptLogin) 189(LoginOK)  71(AccessToTicket) 101(CloseBet)  90(betCompleted)
+
+secuencias[23519,]$Secuencia
+# 160(Go to: Fútbol_Destacado) 160(Go to: Fútbol_Destacado) 286(SelectSportFromSportmenu: soccer) 286(SelectSportFromSportmenu: soccer) 266(SelectSport: soccer) 210(SelectEvent: soccer)
+# 96(ChangeAmountTicket)  96(ChangeAmountTicket) 101(CloseBet)  90(betCompleted) ...
+
+
+
+###CONCLUSION: 
+# 1. El hecho de añadir apuesta, no significa que luego esta apuesta sea completada Existen 5462
+# sesiones que no completaron sus apuestas. Es decir un 40% no completaron en la misma sesion sus apuestas
+num.add.non.completed/num.total.add*100 # 40%
+
+# 2. Existen 20 secuencias poco comprensibles que tienen un betCompleted sin haber añadido una apuesta.
+# Esta situacion se puede dar aunque no es muy tipica (Solo 20 secuencias): Un usuario ha podido añadir apuestas
+# en una sesion y se ha producido un timeout y cuando vuelve al ticket cierra la apuesta y la completa
+# Si nos fijamos todas tienen un evento 71 (AccessToTicket) o 96 (ChangeAmountTicket).
+
+# --------------- FIN 3a. Relacion entre addBet y betCompleted
+
+
+
+# ------------------- 3b. Relacion entre CloseBet y betCompleted
+
+#                action_node action_node_id
+#               betCompleted             90
+#----
+#                   CloseBet            101
+#----
+
+# Numero total de personas que cierran apuesta (la completen o no)
+num.total.closed<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             101 %in% x
+                           })))) 
+num.total.closed # 8970
+
+# Numero de personas que cierran apuesta y completan apuesta
+num.closed.completed<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             101 %in% x && 90 %in% x
+                           })))) 
+num.closed.completed # 7976
+
+# Por ejemplo:
+secuencias[1,]$Secuencia
+# ... 80(addBet) 210(SelectEvent: soccer) 266(SelectSport: soccer) 210(SelectEvent: soccer) 101(CloseBet)  90(betCompleted) 102 190 183
+
+
+
+
+# Numero de personas que cierran apuesta pero no llegan a completarla
+num.closed.non.completed<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             101 %in% x && !(90 %in% x)
+                           })))) 
+num.closed.non.completed # 994
+
+# Por ejemplo:
+secuencias[17,]$Secuencia
+# ... 80(addBet) 252(SelectMarket: soccer)  80(addBet) 101(CloseBet) 101(CloseBet)
+
+
+
+# Numero de personas que sin cerrar apuesta tienen accion de completarla (NO TIENE SENTIDO)
+length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             !(101 %in% x) && 90 %in% x
+                           })))) # 2
+# Por ejemplo:
+secuencias[8801,]$Secuencia
+# ...210  80(addBet)  71(AccessToTicket)  90(betCompleted)
+
+secuencias[20668,]$Secuencia
+# ...80  71 153 266 210  80 266  80(addBet)  71(AccessToTicket)  90(betCompleted)
+
+
+
+###CONCLUSION: 
+# 1. No todos los usuarios que cierran una apuesta terminan por completarla, aunque si un alto porcentaje:
+num.closed.completed/num.total.closed*100 # 88.91
+
+# Existe la posibilidad de que el usuario intente cerrar la apuesta pero el sistema no le deje.
+# Muy probablemente por un error de ticket. Vamos a ver de las que no se cerraron cuantas tienen error de ticket:
+num.closed.withError<-length(which(unlist(lapply(secuencias$Secuencia, 
+                                                     function(x){
+                                                       101 %in% x && !(90 %in% x) && 130 %in% x
+                                                     })))) 
+num.closed.withError/num.closed.non.completed*100 # 35%
+# Solamente hay un 35%, con lo cual no solo es ese el motivo. 
+# El otro motivo es que se arrepienten de la apuesta y la cancelan.
+
+# 2. Por otro lado hay 2 secuencias que tienen un betCompleted sin tener CloseBet, no tiene sentido habria que eliminarlas.
+
+# ----------------FIN 3b. Relacion entre CloseBet y betCompleted
+
+# ---------- 3c. RATIOS entre addBet y CloseBet con referencia a su betCOmpleted
+betCompleted <- 90
+closeBet <- c(101)
+addBet <- c(80:87)
+
+
+# Ahora se va a tener en cuenta la cantidad de addBet que corresponden a cada betCompleted
+# Y de la misma forma la cantidad de closeBet que corresponden a cada betCompleted.
+# Y se calcularan unos ratios.
+#
+#
+# Primero / betCompleted
+#
+
+# ---------------------------------------------
+# ratioPrimero_BetCompleted
+#
+# Calcula para cada secuencia la ratio Primero/betCompleted.
+# 
+# Variables de entrada:
+#
+# «secuencias»: es una matriz de secuencias de navegación
+# «primero»: Es el numerador de la ratio, puede ser «AddBet»
+#            o «CloseBet».
+#
+# Variable de salida:
+#
+# La ratio calculada cuando es posible calcularla. Si el denominador
+# es cero, devuelve NA.
+# Es interesante señalar que, dada una secuencia, calcula la ratio
+# tantas veces como «betCompleted» haya.
+#
+# Ejemplo de uso:
+#
+# secuencias$ratio2 <- ratioPrimero_BetCompleted(secuencias$Secuencia, AddBet)
+# secuencias$ratio3 <- ratioPrimero_BetCompleted(secuencias$Secuencia, CloseBet)
+# ---------------------------------------------
+
+ratioPrimero_BetCompleted <- function(secuencias, primero) {
+  
+  # Bucle para cada secuencia
+  sapply(secuencias, function(sec) {
+    
+    # Posiciones de BetCompleted y de AddBet
+    posBetCompleted <- which(unlist(sec) %in% c(betCompleted))
+    posPrimero <- which(unlist(sec) %in% c(primero))
+    
+    # Si hay algún betCompleted
+    if(length(posBetCompleted) !=0) {
+      
+      # Bucle para cada subsecuencia que contiene betCompleted
+      sapply(posBetCompleted, function(pos) {
+        
+        # Se corta la lista con las posiciones de «primero» pendientes
+        numPrimeroAnteriores <- length(posPrimero[posPrimero < pos])
+        posPrimero <<- tail(posPrimero, 
+                            length(posPrimero) - numPrimeroAnteriores)
+        
+        # Se devuelve la ratio primero / betCompleted del tramo
+        if(numPrimeroAnteriores != 0)
+          return(numPrimeroAnteriores)
+      })
+    } 
+    
+    # Si no hay betCompleted se devuelve un NA
+    else {
+      return(NA)
+    }
+  })
+}
+
+# ---------------------------------------------
+# ratioSecuenciasPrimero_BetCompleted
+#
+# Calcula la ratio Primero/betCompleted para un
+# dataframe de secuencias
+#
+# NOTA: Llama a la función «ratioPrimero_BetCompleted» para
+#       que calcule la ratio para cada tramo de secuencia
+#       con un «betCompleted».
+# 
+# Variables de entrada:
+#
+# «secuencias»: es un dataframe de secuencias de navegación
+# «Primero»: Es lo que está en el numerador de la ratio, puede ser
+#            «AddBet» o «CloseBet».
+#
+# Variable de salida:
+#
+# La ratio calculada para el conjunto de secuencias en las que
+# se ha apostado
+#
+# Ejemplo de uso:
+#
+# ratioSecuenciasPrimero_BetCompleted(secuencias, addBet)
+# ratioSecuenciasPrimero_BetCompleted(secuencias, betCompleted)
+# ---------------------------------------------
+
+ratioSecuenciasPrimero_BetCompleted <- function(secs, primero) {
+  
+  # Se llama a la función que calcula las ratios para cada secuencia
+  # NOTA 1: La razón para utilizar el <<- es que el lado izquierdo de la asignación
+  #         está en el entorno general, no en el de la función.
+  # NOTA 2: Es necesario convertir el resultado de la función «ratioAddBet_BetCompleted»
+  #         en una lista porque la función devuelve una matriz cuando se la llama desde
+  #         aquí. Cuando se la llama de manera interactiva, devuelve una lista. Desconozco
+  #         por qué aparece la matriz.
+  if(levels(factor(primero %in% closeBet))) {
+    lista <<-as.list(ratioPrimero_BetCompleted(secs[["Secuencia"]], primero))
+    media <- round(mean(unlist(lista), na.rm=TRUE), 2) 
+    return(media)
+  }  
+  else {
+    lista <<-as.list(ratioPrimero_BetCompleted(secs[["Secuencia"]], primero))
+    media <- round(mean(unlist(lista), na.rm=TRUE), 2)
+    return(media)
+  }
+}
+
+
+ratioSecuenciasPrimero_BetCompleted(secuencias, addBet) # 5.3
+ratioSecuenciasPrimero_BetCompleted(secuencias, closeBet) # 1.6
+
+
+#####CONCLUSION: 
+# Esto confirma un poco nuestras teorias, viendo los porcentajes anteriores.
+# 1 de cada 5 apuestas que se añaden al ticket acaban por completarse.
+# Sin embargo la gran mayoria de personas que cierran la apuesta, la completan.
+
+
+# --------FIN 3c. RATIOS entre addBet y CloseBet con referencia a su betCompleted
+# ------------------FIN 3. Analisis porcentajes apuestas:------------------------------
+
+
+
+# ----------------------- 4. Analisis apuestas por deporte: ------------------------
+
+columnasDeportes <- c("futbol", "baloncesto", "tenis", "voley", "beisbol", "balonmano",
+                      "rugby", "futbolAmericano", "gimnasia", "galgos", "caballos", 
+                      "artesMarciales", "boxeo", "dardos", "videojuegos", "hockey", 
+                      "loteria", "politica", "borrado", "deporteAnterior")
+
+
+# Lista con nombres
+listaDeportes <- 
+  list(futbol = c(9, 11, 17, 32, 35, 108, 112, 120, 156, 157,
+                  160, 210, 214, 216, 223, 227, 232, 238, 
+                  252, 266, 273, 286), 
+       baloncesto = c(6, 10, 14, 33, 107, 110, 116, 142, 143, 
+                      201, 213, 215, 218, 226, 230, 235, 247, 
+                      257, 270, 277), 
+       tenis = c(12, 21, 36, 113, 121, 180, 211, 224, 228, 242, 
+                 253, 267, 287), 
+       voley = c(115, 181, 182, 212, 225, 229, 243, 254, 268, 288),
+       beisbol = c(146, 200, 246, 256, 276), 
+       balonmano = c(111, 118, 144, 145, 205, 220, 231, 236, 
+                     249, 261, 281),
+       rugby = c(178, 179, 209, 222, 234, 241, 251, 265, 285), 
+       futbolAmericano = c(140, 158, 159, 198, 217, 239, 245, 255, 
+                           269, 275), 
+       gimnasia = c(34, 272), 
+       galgos = c(7, 31, 195, 259, 260, 280), 
+       caballos = c(161, 168, 196, 262, 282), 
+       artesMarciales = c(141, 199),
+       boxeo = c(147, 202), 
+       dardos = c(117, 150, 151, 203, 278), 
+       videojuegos = c(155, 204, 219, 248, 258, 279), 
+       hockey = c(119, 166, 167, 206, 221, 233, 240, 250, 263, 
+                  271, 283), 
+       loteria = c(170, 171, 207, 264, 284), 
+       politica = c(176, 208, 274),
+       borrado = c(152, 153),
+       deporteAnterior = c(-1))
+
+
+contadores <- matrix(vector(mode="numeric",
+                            length = length(columnasDeportes)), 
+                     ncol=length(columnasDeportes))
+colnames(contadores) <- columnasDeportes
+
+#
+#
+# Deporte más apostado / betCompleted
+#
+
+# En la variable «contadores» se acumulan los cómputos
+contadores <- matrix(vector(mode="numeric",
+                            length = length(columnasDeportes)), 
+                     ncol=length(columnasDeportes))
+colnames(contadores) <- columnasDeportes
+
+#
+# Tercer indicador
+#
+# Deporte más apostado / betCompleted
+#
+
+# En la variable «contadores» se acumulan los cómputos
+contadores <- matrix(vector(mode="numeric",
+                            length = length(columnasDeportes)), 
+                     ncol=length(columnasDeportes))
+colnames(contadores) <- columnasDeportes
+
+# ---------------------------------------------
+# patronBetCompleted
+#
+# Corta una secuencia en subsecuencias terminadas en «betCompleted».
+#
+# NOTA: En una secuencia hay un número indeterminado de «betCompleted»
+# 
+# Variables de entrada:
+#
+# «secuencia»: es una secuencias de navegación
+# «pauta»: La constante «betCompleted» habitualmente.
+#
+# Variable de salida:
+#
+# lista de listas. Cada lista es una subsecuencia acabada en «betCompleted»
+# La última que se obtiene, que con frecuencia acaba en otro valor, no se 
+# devuelve.
+#
+# Ejemplo de uso:
+#
+# patronBetCompleted(secuencias[1,]$Secuencias, betCompleted)
+# ---------------------------------------------
+
+patronBetCompleted <- function(secuencia, pauta) {
+  
+  # Posiciones ocupadas por «pauta» en la «secuencia».
+  # Normalmente «pauta» es «betCompleted»
+  posBetCompleted <- which(unlist(secuencia) %in% c(pauta))
+  
+  # Cálculo de las diferencias, que se emplean en la
+  # elaboración del patrón
+  difPosBetCompleted <- diff(posBetCompleted, lag=1)
+  
+  # Construimos el patrón de corte de la secuencia.
+  # Si queremos cortar con la pauta 90 la secuencia
+  # 
+  # 23, 25, 21, 10, 90, 32, 132, 43, 67, 87, 90, 112, 32
+  # el patrón de corte será:
+  # 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3
+  #
+  # NOTA: El patrón de corte debe tener la misma longitud
+  # que la secuencia
+  patronBetCompleted <- c(posBetCompleted[1], 
+                          difPosBetCompleted,
+                          length(secuencia)-
+                            posBetCompleted[1]-
+                            sum(difPosBetCompleted))
+  
+  # se corta la secuencia en subsecuencias que concluyen
+  # en «pauta», que normalmente vale «betCompleted»
+  patron<-split(unlist(secuencia), 
+                rep(1:length(patronBetCompleted),
+                    patronBetCompleted))
+  
+  # Devolvemos sólo aquellas subsecuencias que contienen «pauta»,
+  # que suele valer «betCompleted». Lo normal es que la secuencia
+  # acabe con una subsecuencia que no contiene «pauta» al final
+  return(patron[sapply(patron, function(x) pauta %in% x)])
+}
+
+# ---------------------------------------------
+# acumuladorDeportes
+#
+# Descripción:
+#
+# Calcula el número de apuestas NETAS y EFECTIVAS realizadas.
+#
+# NOTA 1: NETAS significa que se descuentan aquellas apuestas
+#         que han sido borradas por el apostante.
+#
+# NOTA 2: EFECTIVAS significa que sólo se consideran aquellas
+#         apuestas que han concluido con un «betCompleted».
+#
+# «acumulaDeportes» entrega el resultado de sus cálculos en una 
+# variable global llamada «contadores». He aquí un ejemplo del 
+# resultado de esta función.
+#
+# futbol baloncesto tenis voley beisbol balonmano rugby 
+# 41426      15447  2065   744      60      1012    70             
+# futbolAmericano gimnasia galgos caballos
+#   306               12    3549     3062
+# artesMarciales boxeo dardos deportes hockey loteria politica 
+#    28           16    115      198   2201      29       18       
+# borrado deporteAnterior
+#   0               2
+#
+# Variables de entrada:
+#
+# «secuencias»: es una matriz de secuencias de navegación
+# «listaDep»: Es una «lista con nombres» de deportes como «listaDeportes».
+#
+# Variable de salida:
+#
+# No tiene propiamente, aunque entrega los cálculo según se ha descrito.
+#
+# Ejemplo de uso:
+#
+# Acumula toda la matriz
+# invisible(acumuladorDeportes(secuencias$Secuencia, listaDeportes)) 
+#
+# Acumula las primeras 100 secuencias
+# invisible(acumuladorDeportes(secuencias$Secuencia[1:100], listaDeportes)) 
+#
+# Acumula las secuencias 1, 7 y 17
+# invisible(acumuladorDeportes(secuencias$Secuencia[c(1,7,17)], listaDeportes)) 
+# ---------------------------------------------
+
+acumuladorDeportes <- function(secuencias, listaDep) {
+  
+  # Aplanamos la lista de deportes. Es útil para hacer búsquedas
+  elementos <- unlist(listaDep)
+  
+  # Iteramos para cada secuencia
+  sapply(secuencias, function(sec) {
+    
+    # Sólo se sigue si hay «betCompleted» en la secuencia
+    if(!is.na(match(betCompleted, sec))) {
+      
+      # Limpiamos secuencia de elementos que no estén en la lista 
+      # de deportes
+      sec <- sec[which(sapply(sec, function(x) x %in% 
+                                unlist(list(elementos, betCompleted))))]
+      
+      # Se corta la secuencia según el patron definido por betCompleted
+      # en tantas subsecuencias como «betCompleted» haya.
+      subSecuencias <- patronBetCompleted(sec, betCompleted)
+      
+      # Iteramos para cada una de las subsecuencias
+      sapply(subSecuencias, function(subsec) {
+        
+        # Iteramos para cada elemento de la secuencia
+        sapply(subsec, function(elem) {
+          
+          # Si no se trata del elemento «betCompleted»
+          if(elem != betCompleted) {
+            
+            # Buscamos a qué deporte pertenece el elemento «elem»,
+            # los deportes están en la lista con nombres «listaDep»
+            deporte <- names(
+              listaDep[sapply(listaDep, function(x) elem %in% x)])
+            
+            # Si no se trata de un evento de borrado de apuesta
+            if(deporte != "borrado") { 
+              
+              # Incrementamos el contador correspondiente en la matriz de contadores
+              contadores[1, deporte] <<- contadores[1, deporte] + 1
+              contadores[1,"deporteAnterior"] <<- match(deporte, columnasDeportes)
+              
+              # Si se trata de un evento de borrado de apuesta
+            } else {  
+              # Decrementamos el contador del deporte anterior
+              deporteAnterior <- columnasDeportes[contadores[[1,"deporteAnterior"]]]
+              contadores[1, "deporteAnterior"] <<- contadores[1, "deporteAnterior"] - 1
+            }
+          }
+        })
+      })
+    }
+  })
+}
+
+
+
+# ---------------------------------------------
+# reinicioContadores
+#
+# Pone a cero los contadores de los deportes
+#
+# Variables de entrada: Ninguna
+#
+# Variable de salida: Ninguna
+#
+# Ejemplo de uso:
+#
+# reinicioContadores()
+# ---------------------------------------------
+
+reinicioContadores <- function () 
+  invisible(lapply(1:dim(contadores)[2], function(i) contadores[1,i] <<- 0))
+
+reinicioContadores()
+invisible(acumuladorDeportes(secuencias$Secuencia, listaDeportes)) 
+contadores
+
+grafoDeportes <- list(
+  ggplot() + geom_bar(width=.5,stat = "identity",data = melt(sort(as.data.frame(contadores),decreasing = TRUE))) 
+  + aes(y = value, x = factor(variable), fill = factor(variable))
+  + xlab("Deporte")
+  + ylab("Num Apuestas"))
+
+marrangeGrob(grafoDeportes, nrow=1, ncol = 1, 
+             top = "Deportes mas apostados")
+
+
+#CONCLUSION: 
+# Los deportes mas apostados son en este orden: futbol, baloncesto, tenis balonmano, hockey, galgos, caballos.
+# Y luego hay una serie de deportes menos apostados.
+# El que se lleva la palma es el futbol con una gran mayoria de las apuestas.
+
+
+
+
+# ------------------ 5. Analisis porcentajes logados/no logados:---------------
+# IMP: Un usuario NO logado puede añadir apuesta pero nunca cerrar apuesta y por lo tanto completarla
+# solamente pueden cerrar y completar apuesta usuarios logados
+# IMP: En esta parte del codigo analizaremos las sesiones que se han logado, no los usuarios logados.
+# puesto que un usuario se ha podido logar en una sesion anterior
+
+# Numero de personas que se logan
+num_logados<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             189 %in% x
+                           })))) 
+num_logados # 9701
+
+# Porcentaje logados:
+num_logados/dim(secuencias)[1]*100 #39.33%
+
+# Numero de personas que NO se logan
+num_NO_logados<-length(which(unlist(lapply(secuencias$Secuencia, 
+                           function(x){
+                             !(189 %in% x)
+                           })))) 
+num_NO_logados # 14964
+
+# Porcentaje NO logados:
+num_NO_logados/dim(secuencias)[1]*100 #60.66%
+
+# Vamos a hacer algunos analisis anteriores sobre el subconjunto de los logados:
+secuenciasLogados<-secuencias[which(unlist(lapply(secuencias$Secuencia, 
+                                                  function(x){
+                                                    189 %in% x
+                                                  })))]
+
+# 1. Dispersion de longitudes de logados:
+
+# Longitud media de secuencias
+mean(secuencias$Longitud) # 38.78
+mean(secuenciasLogados$Longitud) # 50.1673
+# La longitud media aumenta con respecto al total del 38 a 50 pasos
+
+summary(secuencias$Longitud)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 2.00    8.00   19.00   38.79   49.00  384.00
+
+summary(secuenciasLogados$Longitud)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 2.00   11.00   29.00   50.17   65.00  381.00
+
+par(mfrow = c( 1, 2 )) 
+boxplot(secuencias$Longitud, main="Total secuencias")
+boxplot(secuenciasLogados$Longitud, main="Secuencias Logadas") 
+par(mfrow = c( 1, 1 )) 
+# Se ve claramente como es mucho mas frecuente tener secuencias mas largas
+# Es decir las sesiones logadas son mas propensas a navegar mas.
+
+
+# 2. Apuestas por longitud para logados:
+
+grafoMultipleLogados <- list(
+  ggplot() + geom_bar(data = secuenciasLogados,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)))
+  + xlab("Long. navegación")
+  + ylab("frec absoluta")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")),
+  ggplot() + geom_bar(data = secuenciasLogados,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)),
+                      position = "fill")
+  + xlab("Long. navegación")
+  + ylab("proporción")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")))
+
+marrangeGrob(grafoMultipleLogados, nrow=1, ncol = 2, 
+             top = "Proporción BetCompleted según longitud navegación")
+
+# Como era de esperar la proporcion de apuestas aumenta en los logados en general 
+# en todos los tramos de longitud con respecto al total de secuencias.
+
+# CONCLUSION:
+# Por lo tanto las sesiones que se logan, navegan mas y tienen una alta probabilidad de apostar.
+# Cuanto mas navegen mas apuestan.
+
+
+# 3. % apuestas para logados
+
+# Numero de apuestas
+num_apuestas.logados<-sum(secuenciasLogados[secuenciasLogados$BetCompleted>=1]$BetCompleted)
+num_apuestas.logados #10102
+
+# Numero de personas que apuestan
+num_apostantes.logados<-length(secuenciasLogados[secuenciasLogados$BetCompleted>=1]$BetCompleted)
+num_apostantes.logados #4629
+
+# Media de apuestas por persona:
+num_apuestas.logados/num_apostantes.logados #2.182329
+
+# Porcentaje apostantes:
+num_apostantes.logados/dim(secuenciasLogados)[1]*100 #47.71%
+
+# Numero de personas que NO apuestan
+num_no_apostantes.logados<-length(secuenciasLogados[secuenciasLogados$BetCompleted==0]$BetCompleted)
+num_no_apostantes.logados #5072
+
+# Porcentaje NO apostantes:
+num_no_apostantes.logados/dim(secuenciasLogados)[1]*100 #52.28%
+
+# CONCLUSION:
+# Un 47% de las sesionres logados apuestan, frente a un 52% que no lo hacen
+# La media de apuesta por persona aumenta muy poco hasta el 2.18, frente el 2.12 que tiene toda la muestra.
+# Es decir cuando una sesion se loga parece que es bastante mas probable que apueste pero no definitivo.
+# Y ademas el numero de apuestas por sesion tampoco aumenta de una forma notable.
+# Con lo cual podemos decir que el hecho de apostar viene mas dado por logarse y la longitud, que simplemente logarse.
+
+
+
+# 4. Relacion entre addBet y betCompleted para logados
+
+# Numero de logados que añaden apuesta (en total, la completen o no)
+numLogados.total.add<-length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                                          function(x){(80 %in% x || 81 %in% x || 82 %in% x 
+                                                       || 83 %in% x || 84 %in% x || 85 %in% x 
+                                                       || 86 %in% x || 87 %in% x)
+                                          })))) 
+numLogados.total.add # 5799
+
+
+
+# Numero de logados que añaden apuesta y la completan
+numLogados.add.completed<-length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                                              function(x){
+                                                90 %in% x && 
+                                                  (80 %in% x || 81 %in% x || 82 %in% x 
+                                                   || 83 %in% x || 84 %in% x || 85 %in% x 
+                                                   || 86 %in% x || 87 %in% x)
+                                              })))) 
+numLogados.add.completed # 4625
+
+
+
+# Numero de logados que añaden apuesta y luego NO completan la apuesta
+numLogados.add.non.completed<-length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                                                  function(x){
+                                                    !(90 %in% x) && 
+                                                      (80 %in% x || 81 %in% x || 82 %in% x 
+                                                       || 83 %in% x || 84 %in% x || 85 %in% x 
+                                                       || 86 %in% x || 87 %in% x)
+                                                  })))) 
+numLogados.add.non.completed # 1174
+
+
+# Numero de logados que completan una apuesta sin haberla abierto:
+length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                           function(x){
+                             90 %in% x && 
+                               (!(80 %in% x) && !(81 %in% x) && !(82 %in% x) 
+                                && !(83 %in% x) && !(84 %in% x) && !(85 %in% x) 
+                                && !(86 %in% x) && !(87 %in% x))
+                           })))) #  20
+
+
+
+ 
+# En el caso de logados se reduce muchisimo el numero de personas que añaden apuesta y no la completan
+numLogados.add.non.completed/numLogados.total.add*100 # 20%
+# Del 40% del total de la muestra se reduce al 20%. Aun asi no se puede decir que si se añade apuesta y esta logado
+# complete la apuesta.
+
+# CONCLUSION
+# Esto quiere decir que si te has logado y añades una apuesta es porque tienes una alta probabilidad de cerrarla.
+# Frente a muchos que añaden una apuesta sin logarse y no estan del todo convencidos.
+
+# 5. Relacion entre CloseBet y betCompleted para logados
+
+# Numero total de logados que cierran apuesta (la completen o no)
+numLogados.total.closed<-length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                                             function(x){
+                                               101 %in% x
+                                             })))) 
+numLogados.total.closed # 5034
+
+# Numero de logados que cierran apuesta y completan apuesta
+numLogados.closed.completed<-length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                                                 function(x){
+                                                   101 %in% x && 90 %in% x
+                                                 })))) 
+numLogados.closed.completed # 4627
+
+
+# Numero de logados que cierran apuesta pero no llegan a completarla
+numLogados.closed.non.completed<-length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                                                     function(x){
+                                                       101 %in% x && !(90 %in% x)
+                                                     })))) 
+numLogados.closed.non.completed # 407
+
+
+# Numero de logados que sin cerrar apuesta tienen accion de completarla (NO TIENE SENTIDO)
+length(which(unlist(lapply(secuenciasLogados$Secuencia, 
+                           function(x){
+                             !(101 %in% x) && 90 %in% x
+                           })))) # 2
+
+# Entre los logados si se puede decir practicamente que si cierran apuesta la completan:
+numLogados.closed.completed/numLogados.total.closed*100 # 91.91
+# completarla en dicha sesion. Un 91% de los clientes acaban completandola, frente a un 89.
+
+# CONCLUSION:
+# Obvio decir, que para las sesiones que se han logado (que son clientes habituales) el hecho de logarse
+# y añadir una o varias apuestas tienen intencion de cerrarlas. Si es asi practicamente todos tienen la convincion de
+# completarla en dicha sesion. Un 91% de los clientes acaban completandola, frente a un 89.
+# Como segundo punto decir, por los altos porcentajes que si un usuario cierra la apuesta (y por lo tanto
+# ya bien sea en esta u en otra sesion se ha logado) practicamente todos acaban por completarla.
+
+
+
+# ------------------ 6. Analisis porcentajes usuarios autenticados: ---------------
+# IMP: Un usuario NO autenticados puede añadir apuesta pero nunca cerrar apuesta y por lo tanto completarla
+# solamente pueden cerrar y completar apuesta usuarios autenticados
+# IMP: En esta parte del codigo analizaremos los usuario autenticados en general aunque no se hayan logado en
+# esa sesion.
+# Numero de personas que se logan
+num_autenticados<-dim(secuencias[secuencias$isAuthenticated==1,])[1] 
+num_autenticados # 18696
+
+num_autenticados/dim(secuencias)[1]*100 #75.79%
+
+# Numero de personas que NO se logan
+num_NO_autenticados<-dim(secuencias[secuencias$isAuthenticated==0,])[1]
+num_NO_autenticados # 5969
+
+# Porcentaje NO logados:
+num_NO_autenticados/dim(secuencias)[1]*100 #24.20%
+
+# Vamos a hacer algunos analisis anteriores sobre el subconjunto de los logados:
+secuenciasAutenticadas<-secuencias[secuencias$isAuthenticated==1,]
+
+# CONCLUSION:
+# Vemos que el porcentaje de sesiones (usuarios) autenticados aumenta mucho con respecto a sesiones que
+# se logan en dicha sesion. Lo cual quiere decir que muchisimas sesiones ya estan previamente logadas.
+# De hecho un 75% de las sesiones podrian apostar, son usuarios logados. Es decir el logarse no es realmente
+# un impedimento para apostar.
+
+
+# 1. Dispersion de longitudes de autenticados:
+
+# Longitud media de secuencias
+mean(secuenciasLogados$Longitud) # 50.1673
+mean(secuenciasAutenticadas$Longitud) # 42.92084
+# La longitud media es menor que las sesiones logadas, aun asi mayor que la media que era de 38.
+
+summary(secuenciasLogados$Longitud)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 2.00   11.00   29.00   50.17   65.00  381.00
+
+summary(secuenciasAutenticadas$Longitud)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 2.00    8.00   22.00   42.92   55.00  381.00
+
+par(mfrow = c( 1, 3 )) 
+boxplot(secuencias$Longitud, main="Total secuencias")
+boxplot(secuenciasLogados$Longitud, main="Secuencias Logadas") 
+boxplot(secuenciasAutenticadas$Longitud, main="Secuencias Autenticadas") 
+par(mfrow = c( 1, 1 )) 
+
+# CONCLUSION
+# Da la sensacion que aunque ambas tienen mas navegacion que la media en general,
+# los usuarios que se logan en esa sesion navegan mas en busca de eventos, sin embargo
+# ante una nueva sesion de un usuario que ya esta logado, no navega tanto sino que lo tiene
+# algo mas claro.
+
+
+# 2. Apuestas por longitud para logados:
+
+grafoMultipleLogados <- list(
+  ggplot() + geom_bar(data = secuenciasAutenticadas,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)))
+  + xlab("Long. navegación")
+  + ylab("frec absoluta")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")),
+  ggplot() + geom_bar(data = secuenciasAutenticadas,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)),
+                      position = "fill")
+  + xlab("Long. navegación")
+  + ylab("frec absoluta")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")))
+
+marrangeGrob(grafoMultipleLogados, nrow=1, ncol = 2, 
+             top = "Proporción BetCompleted según longitud navegación")
+
+# Pasa un poco lo mismo que en general, la longitud de navegacion es un factor importantisimo
+# para apostar.
+
+# Vamos a comparar la media general, secuencias logadas y secuencias autenticadas:
+grafoMultipleLogados <- list(
+  ggplot() + geom_bar(data = secuencias,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)))
+  + xlab("General")
+  + ylab("frec absoluta")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")),
+  ggplot() + geom_bar(data = secuenciasLogados,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)))
+  + xlab("Sec.Logadas")
+  + ylab("frec absoluta")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")),
+  ggplot() + geom_bar(data = secuenciasAutenticadas,
+                      aes(x=factor(Grupo),
+                          fill=factor(Status)))
+  + xlab("Sec.Autenticadas")
+  + ylab("frec absoluta")
+  + scale_fill_discrete("BetCompleted",
+                        labels = c("No apuesta", "Apuesta")))
+
+marrangeGrob(grafoMultipleLogados, nrow=1, ncol = 3, 
+             top = "Proporción BetCompleted según longitud navegación")
+
+# CONCLUSION
+# En esta grafica podemos ver un poco todo. OJO Porque son diferentes magnitudes en el eje Y.
+# 1. Obviamente en todas las longitudes, es mas probable apostar en secuencias logadas y autenticadas
+# que la media general
+# 2. Cuanto mas longitud tiene la secuencia (cuanto mas navegan), mas probable es la puesta.
+# Tanto para autenticadas como logadas
+# Da la sensacion que la proporcion de secuencias logadas que apuestan es mayor que las autenticadas.
+# Navegan mas, pero tienen mas propension a apostar. Las autenticadas en general apuestan rapido.
+# no olvidas que dentro de las autenticadas estan las logadas. Pero queda claro que si una sesion se loga es con intencion
+# de apostar, cuanto mas nevege mas probabilidad de apuesta tiene.
+
+
+# 3. % apuestas para Autenticadas
+
+# Numero de apuestas
+num_apuestas.autenticados<-sum(secuenciasAutenticadas[secuenciasAutenticadas$BetCompleted>=1]$BetCompleted)
+num_apuestas.autenticados #16601
+
+# Numero de personas que apuestan
+num_apostantes.autenticados<-length(secuenciasAutenticadas[secuenciasAutenticadas$BetCompleted>=1]$BetCompleted)
+num_apostantes.autenticados #7860
+
+# Media de apuestas por persona:
+num_apuestas.autenticados/num_apostantes.autenticados #2.112087
+
+# Porcentaje apostantes:
+num_apostantes.autenticados/dim(secuenciasAutenticadas)[1]*100 #42.04%
+
+# Numero de personas que NO apuestan
+num_no_apostantes.autenticados<-length(secuenciasAutenticadas[secuenciasAutenticadas$BetCompleted==0]$BetCompleted)
+num_no_apostantes.autenticados #10836
+
+# Porcentaje NO apostantes:
+num_no_apostantes.autenticados/dim(secuenciasAutenticadas)[1]*100 #57.95%
+
+# CONCLUSION:
+# Tenmos un 42% de sesiones autenticadas que apuestan frente a un 58% que no apuestan.
+# Y la media de apuestas por sesion autenticada sigue siendo en torno al 2 (2.11)
+# Es un porcentage algo mas bajo que las sesiones logadas, pero obviamente mas alto que la media general.
+# Y la media de apuestas al final si que es la misma practicamente.
+# O sea que podemos decir un poco lo mismo que para las sesiones logadas: Cuando un usuario esta autenticado
+# es bastante mas probable que apueste pero no definitivo.
+# Y ademas el numero de apuestas por sesion tampoco aumenta de una forma notable con respecto a la media.
+# Con lo cual podemos decir que el hecho de apostar viene mas dado por logarse y la longitud, que simplemente logarse.
+
+
+
+# 4. Relacion entre addBet y betCompleted para Autenticadas
+
+# Numero de Autenticadas que añaden apuesta (en total, la completen o no)
+numAutenticados.total.add<-length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                                                 function(x){(80 %in% x || 81 %in% x || 82 %in% x 
+                                                              || 83 %in% x || 84 %in% x || 85 %in% x 
+                                                              || 86 %in% x || 87 %in% x)
+                                                 })))) 
+numAutenticados.total.add # 10567
+
+
+
+# Numero de Autenticadas que añaden apuesta y la completan
+numAutenticados.add.completed<-length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                                                     function(x){
+                                                       90 %in% x && 
+                                                         (80 %in% x || 81 %in% x || 82 %in% x 
+                                                          || 83 %in% x || 84 %in% x || 85 %in% x 
+                                                          || 86 %in% x || 87 %in% x)
+                                                     })))) 
+numAutenticados.add.completed # 7841
+
+
+
+# Numero de Autenticadas que añaden apuesta y luego NO completan la apuesta
+numAutenticados.add.non.completed<-length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                                                         function(x){
+                                                           !(90 %in% x) && 
+                                                             (80 %in% x || 81 %in% x || 82 %in% x 
+                                                              || 83 %in% x || 84 %in% x || 85 %in% x 
+                                                              || 86 %in% x || 87 %in% x)
+                                                         })))) 
+numAutenticados.add.non.completed # 2726
+
+
+# Numero de Autenticadas que completan una apuesta sin haberla abierto:
+length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                           function(x){
+                             90 %in% x && 
+                               (!(80 %in% x) && !(81 %in% x) && !(82 %in% x) 
+                                && !(83 %in% x) && !(84 %in% x) && !(85 %in% x) 
+                                && !(86 %in% x) && !(87 %in% x))
+                           })))) #  19
+
+
+
+
+# En el caso de autenticados se reduce muchisimo el numero de personas que añaden apuesta y no la completan
+numAutenticados.add.non.completed/numAutenticados.total.add*100 # 25.79%
+# Del 40% del total de la muestra se reduce al 25%. Aun asi no se puede decir que si se añade apuesta y esta autenticado
+# complete la apuesta.
+
+# CONCLUSION
+# Pasa igual que con las sesiones logadas, cuando un usuario esta autenticado y añade una apuesta tiene una alta probabilidad
+# de completarla.
+# Frente a muchos que añaden una apuesta sin logarse y no estan del todo convencidos.
+
+# 5. Relacion entre CloseBet y betCompleted para Autenticadas
+
+# Numero total de Autenticadas que cierran apuesta (la completen o no)
+numAutenticados.total.closed<-length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                                                    function(x){
+                                                      101 %in% x
+                                                    })))) 
+numAutenticados.total.closed # 8682
+
+# Numero de Autenticadas que cierran apuesta y completan apuesta
+numAutenticados.closed.completed<-length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                                                        function(x){
+                                                          101 %in% x && 90 %in% x
+                                                        })))) 
+numAutenticados.closed.completed # 7858
+
+
+# Numero de Autenticadas que cierran apuesta pero no llegan a completarla
+numAutenticados.closed.non.completed<-length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                                                            function(x){
+                                                              101 %in% x && !(90 %in% x)
+                                                            })))) 
+numAutenticados.closed.non.completed # 824
+
+
+# Numero de Autenticadas que sin cerrar apuesta tienen accion de completarla (NO TIENE SENTIDO)
+length(which(unlist(lapply(secuenciasAutenticadas$Secuencia, 
+                           function(x){
+                             !(101 %in% x) && 90 %in% x
+                           })))) # 2
+
+# Entre los Autenticadas si se puede decir practicamente que si cierran apuesta la completan:
+numAutenticados.closed.completed/numAutenticados.total.closed*100 # 90.50
+# completarla en dicha sesion. Un 91% de los clientes acaban completandola, frente a un 89.
+
+# CONCLUSION:
+# Todo lo dicho con respecto a las sesiones logadas es aplicable a usuarios autenticados.
+# Si cierran la apuesta van a completarla, independientemente de sus errores (un 90% de sesiones termina por cerrarla).
+# Y en general pasa asi en toda la muestra (un 89%), lo cual es logico porque solo pueden cerrar apusta los
+# usuarios logados.
+
+# ------------------ 7. Otros analisis interesantes: ---------------
+# Vamos a ver algunas otras medidas mas entre los logados y autenticados:
+
+# 1. Ratios de relacion (incluyendo el orden):
+
+# Ratios para toda la muestra:
+# Ratio de addBet con BetCompleted:
+ratioSecuenciasPrimero_BetCompleted(secuencias, addBet) # 5.3
+# Es decir cada 5 apuestas añadidas se completa 1
+
+# Ratio de closeBet con BetCompleted:
+ratioSecuenciasPrimero_BetCompleted(secuencias, closeBet) # 1.6
+# Es decir cada 1.6 apuestas cerradas se completa 1
+
+
+# Ratios las sesiones logadas:
+# Ratio de addBet con BetCompleted:
+ratioSecuenciasPrimero_BetCompleted(secuenciasLogados, addBet) # 5.26
+# Es decir cada 5 apuestas añadidas se completa 1
+
+# Ratio de closeBet con BetCompleted:
+ratioSecuenciasPrimero_BetCompleted(secuenciasLogados, closeBet) # 1.61
+# Es decir cada 1.61 apuestas cerradas se completa 1
+
+# Ratios las sesiones autenticadas:
+# Ratio de addBet con BetCompleted:
+ratioSecuenciasPrimero_BetCompleted(secuenciasAutenticadas, addBet) # 5.31
+# Es decir cada 5 apuestas añadidas se completa 1
+
+# Ratio de closeBet con BetCompleted:
+ratioSecuenciasPrimero_BetCompleted(secuenciasAutenticadas, closeBet) # 1.6
+# Es decir cada 1.6 apuestas cerradas se completa 1
+
+# CONCLUSION:
+# No existe diferencias entre ambas
+
+
+# 2. Deportes mas apostados:
+# Recogemos los deportes mas apostados en la muestra total, autenticadas y sesiones logadas y los agrupamos:
+reinicioContadores()
+invisible(acumuladorDeportes(secuencias$Secuencia, listaDeportes)) 
+deportes.total <- sort(as.data.frame(contadores),decreasing = TRUE)
+deportes.total
+#  futbol baloncesto tenis balonmano hockey galgos caballos futbolAmericano voley
+#  125829      18944 10918      3517   2251   1681     1357            1169   633
+# deportes beisbol politica rugby artesMarciales gimnasia boxeo loteria deporteAnterior
+#      341      79       59    44             36       35    29      12               1
+# dardos borrado
+#      0       0
+
+
+reinicioContadores()
+invisible(acumuladorDeportes(secuenciasAutenticadas$Secuencia, listaDeportes)) 
+sum(contadores) # 164849
+deportes.autenticadas <- sort(as.data.frame(contadores),decreasing = TRUE)
+deportes.autenticadas
+#  futbol baloncesto tenis balonmano hockey galgos caballos futbolAmericano voley
+#  124203      18844 10721      3386   2242   1675     1349            1169   633
+# deportes beisbol politica rugby artesMarciales boxeo gimnasia loteria deporteAnterior
+#      341      79       59    44             36    29       26      12               1
+# dardos borrado
+#      0       0
+
+reinicioContadores()
+invisible(acumuladorDeportes(secuenciasLogados$Secuencia, listaDeportes)) 
+sum(contadores) # 98529
+deportes.logados <- sort(as.data.frame(contadores),decreasing = TRUE)
+deportes.logados
+#  futbol baloncesto tenis balonmano hockey galgos caballos futbolAmericano voley
+#   73701      11715  6190      2175   1399   1150      826             727   329
+# deportes beisbol rugby politica gimnasia artesMarciales loteria boxeo deporteAnterior
+#      151      43    36       27       23             18      12     6               1
+# dardos borrado
+#      0       0
+
+melted.deportes.total<-melt(deportes.total)[1:9,]
+melted.deportes.total$grupo<- "Total muestra"
+melted.deportes.autenticadas<-melt(deportes.autenticadas)[1:9,]
+melted.deportes.autenticadas$grupo<- "Sec. Autenticadas"
+melted.deportes.logados<-melt(deportes.logados)[1:9,]
+melted.deportes.logados$grupo<- "Sec. Logadas"
+melted.deportes.general <- rbind(melted.deportes.total,melted.deportes.autenticadas)
+melted.deportes.general<-rbind(melted.deportes.general,melted.deportes.logados)
+
+
+grafoDeportes <- list(
+  ggplot() + geom_bar(stat = "identity",data = melted.deportes.general, position="dodge") 
+  + aes(y = value, x = factor(grupo), fill=factor(variable))
+  + xlab("Grupo")
+  + ylab("Num Apuestas")
+  + scale_fill_discrete("Deporte"))
+
+marrangeGrob(grafoDeportes, nrow=1, ncol = 1, 
+             top = "Deportes")
+
+# CONCLUSION:
+# Realmente se comportan exactamente igual. El estar autenticado o no, logado o no, 
+# no es influyente en el deporte, seguramente lo seran los eventos que hayan.
