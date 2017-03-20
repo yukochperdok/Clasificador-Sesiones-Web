@@ -1,0 +1,16 @@
+{
+  "name": "OutputDataset-Pageviews-Database",
+  "properties": {
+    "published": false,
+    "type": "AzureSqlTable",
+    "linkedServiceName": "Destination-DatabaseCronodata",
+    "typeProperties": {
+      "tableName": "dbo.events_views"
+    },
+    "availability": {
+      "frequency": "Hour",
+      "interval": 1
+    }
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Table.json"
+}

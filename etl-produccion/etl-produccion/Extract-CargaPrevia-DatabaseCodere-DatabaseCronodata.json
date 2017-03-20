@@ -1,0 +1,270 @@
+{
+  "name": "Extract-CargaPrevia-DatabaseCodere-DatabaseCronodata",
+  "properties": {
+    "activities": [
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Sports]')"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Sports]')",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,sportHandle:sportHandle,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-sports-cargaprevia"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-sports-cargaprevia"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CargaPrevia-CopySports-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Countries]')"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Countries]')",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-countries-cargaprevia"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-countries-cargaprevia"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CargaPrevia-CopyCountries-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Leagues]')"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Leagues]')",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,sportHandle:sportHandle,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-leagues-cargaprevia"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-leagues-cargaprevia"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CargaPrevia-CopyLeagues-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Events]')"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Events]')",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,startDate:startDate,sportHandle:sportHandle,InsertDate:InsertDate,islive:islive"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-eventsNode-cargaprevia"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-eventsNode-cargaprevia"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CargaPrevia-CopyEvents-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Markets]')"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Markets]')",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,startDate:startDate,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-markets-cargaprevia"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-markets-cargaprevia"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CargaPrevia-CopyMarkets-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Results]')"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Results]')",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,startDate:startDate,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-results-cargaprevia"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-results-cargaprevia"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CargaPrevia-CopyResults-DatabaseCodere-DatabaseCronodata"
+      }
+    ],
+    "start": "2017-01-21T00:00:00Z",
+    "end": "2017-01-27T23:00:00Z",
+    "isPaused": true,
+    "pipelineMode": "Scheduled"
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Pipeline.json"
+}

@@ -1,0 +1,114 @@
+{
+  "name": "Update-DatabaseCronodata",
+  "properties": {
+    "activities": [
+      {
+        "type": "SqlServerStoredProcedure",
+        "typeProperties": {
+          "storedProcedureName": "dbo.update_events",
+          "storedProcedureParameters": {
+            "DateTime": "$$Text.Format('{0:s}', SliceStart)"
+          }
+        },
+        "inputs": [
+          {
+            "name": "OutputDataset-Events"
+          },
+          {
+            "name": "OutputDataset-sports"
+          },
+          {
+            "name": "OutputDataset-countries"
+          },
+          {
+            "name": "OutputDataset-leagues"
+          },
+          {
+            "name": "OutputDataset-eventsNode"
+          },
+          {
+            "name": "OutputDataset-markets"
+          },
+          {
+            "name": "OutputDataset-results"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-Events-Database"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-UpdateEvent-DatabaseCronodata"
+      },
+      {
+        "type": "SqlServerStoredProcedure",
+        "typeProperties": {
+          "storedProcedureName": "dbo.update_views",
+          "storedProcedureParameters": {
+            "DateTime": "$$Text.Format('{0:s}', SliceStart)"
+          }
+        },
+        "inputs": [
+          {
+            "name": "OutputDataset-Pageviews"
+          },
+          {
+            "name": "OutputDataset-sports"
+          },
+          {
+            "name": "OutputDataset-countries"
+          },
+          {
+            "name": "OutputDataset-leagues"
+          },
+          {
+            "name": "OutputDataset-eventsNode"
+          },
+          {
+            "name": "OutputDataset-markets"
+          },
+          {
+            "name": "OutputDataset-results"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-Pageviews-Database"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-UpdatePageView-DatabaseCronodata"
+      }
+    ],
+    "start": "2017-01-21T00:00:00Z",
+    "end": "2017-01-27T23:00:00Z",
+    "isPaused": true,
+    "pipelineMode": "Scheduled"
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Pipeline.json"
+}

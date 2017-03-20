@@ -1,0 +1,10 @@
+{
+  "name": "Destination-DatabaseCronodata",
+  "properties": {
+    "type": "AzureSqlDatabase",
+    "typeProperties": {
+      "connectionString": "Data Source=produccion-server-bd.database.windows.net;Initial Catalog=PRODUCCION_BD;Integrated Security=False;User ID=cronodata;Password=**********;Connect Timeout=30;Encrypt=True"
+    }
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.LinkedService.json"
+}

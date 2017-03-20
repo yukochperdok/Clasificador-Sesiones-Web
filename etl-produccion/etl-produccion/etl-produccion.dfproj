@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>e6133ac2-ebde-461a-aaff-c11d73cd2719</ProjectGuid>
+    <OutputType>File</OutputType>
+    <AssemblyName>DataFactory</AssemblyName>
+    <ApiVersion>2015-09-01</ApiVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <Name>etl-produccion</Name>
+    <RootNamespace>etl-produccion</RootNamespace>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ADFConfigFileToPublish>
+    </ADFConfigFileToPublish>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Dependencies\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Script Include="Destination-DatabaseCronodata.json" />
+    <Script Include="Extract-BlobCodere-DatabaseCronodata.json" />
+    <Script Include="Extract-CargaPrevia-DatabaseCodere-DatabaseCronodata.json" />
+    <Script Include="Extract-DatabaseCodere-DatabaseCronodata.json" />
+    <Script Include="InputDataset-countries-cargaprevia.json" />
+    <Script Include="InputDataset-countries.json" />
+    <Script Include="InputDataset-Events.json" />
+    <Script Include="InputDataset-eventsNode-cargaprevia.json" />
+    <Script Include="InputDataset-eventsNode.json" />
+    <Script Include="InputDataset-leagues-cargaprevia.json" />
+    <Script Include="InputDataset-leagues.json" />
+    <Script Include="InputDataset-markets-cargaprevia.json" />
+    <Script Include="InputDataset-markets.json" />
+    <Script Include="InputDataset-Pageviews.json" />
+    <Script Include="InputDataset-results-cargaprevia.json" />
+    <Script Include="InputDataset-results.json" />
+    <Script Include="InputDataset-sports-cargaprevia.json" />
+    <Script Include="InputDataset-sports.json" />
+    <Script Include="OutputDataset-countries-cargaprevia.json" />
+    <Script Include="OutputDataset-countries.json" />
+    <Script Include="OutputDataset-Events-Database.json" />
+    <Script Include="OutputDataset-Events.json" />
+    <Script Include="OutputDataset-eventsNode-cargaprevia.json" />
+    <Script Include="OutputDataset-eventsNode.json" />
+    <Script Include="OutputDataset-leagues-cargaprevia.json" />
+    <Script Include="OutputDataset-leagues.json" />
+    <Script Include="OutputDataset-markets-cargaprevia.json" />
+    <Script Include="OutputDataset-markets.json" />
+    <Script Include="OutputDataset-Nodes-Database.json" />
+    <Script Include="OutputDataset-Pageviews-Database.json" />
+    <Script Include="OutputDataset-Pageviews.json" />
+    <Script Include="OutputDataset-results-cargaprevia.json" />
+    <Script Include="OutputDataset-results.json" />
+    <Script Include="OutputDataset-sports-cargaprevia.json" />
+    <Script Include="OutputDataset-sports.json" />
+    <Script Include="Source-BlobCodere.json" />
+    <Script Include="Source-DatabaseCodere.json" />
+    <Script Include="Update-DatabaseCronodata-Nodes.json" />
+    <Script Include="Update-DatabaseCronodata.json" />
+  </ItemGroup>
+  <Import Project="$(AppData)\Microsoft\DataFactory Tools for Visual Studio\MsBuild\1.0\DataFactory.targets" />
+</Project>

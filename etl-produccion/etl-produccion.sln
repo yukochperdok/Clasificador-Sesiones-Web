@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{3466B219-07DB-46AE-8697-CFD2A1650EC8}") = "etl-produccion", "etl-produccion\etl-produccion.dfproj", "{E6133AC2-EBDE-461A-AAFF-C11D73CD2719}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E6133AC2-EBDE-461A-AAFF-C11D73CD2719}.Debug|x86.ActiveCfg = Debug|x86
+		{E6133AC2-EBDE-461A-AAFF-C11D73CD2719}.Debug|x86.Build.0 = Debug|x86
+		{E6133AC2-EBDE-461A-AAFF-C11D73CD2719}.Release|x86.ActiveCfg = Release|x86
+		{E6133AC2-EBDE-461A-AAFF-C11D73CD2719}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://cronodata.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = etl-produccion\\etl-produccion.dfproj
+		SccProjectName1 = etl-produccion
+		SccLocalPath1 = etl-produccion
+	EndGlobalSection
+EndGlobal

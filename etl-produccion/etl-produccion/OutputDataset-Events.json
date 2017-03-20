@@ -1,0 +1,80 @@
+{
+  "name": "OutputDataset-Events",
+  "properties": {
+    "structure": [
+      {
+        "name": "action",
+        "type": "String"
+      },
+      {
+        "name": "context_data_event_time",
+        "type": "String"
+      },
+      {
+        "name": "context_device_type",
+        "type": "String"
+      },
+      {
+        "name": "context_device_os_version",
+        "type": "String"
+      },
+      {
+        "name": "context_device_model",
+        "type": "String"
+      },
+      {
+        "name": "context_device_browser",
+        "type": "String"
+      },
+      {
+        "name": "context_user_anon_id",
+        "type": "String"
+      },
+      {
+        "name": "context_user_auth_id",
+        "type": "String"
+      },
+      {
+        "name": "context_user_is_authenticated",
+        "type": "String"
+      },
+      {
+        "name": "context_session_id",
+        "type": "String"
+      },
+      {
+        "name": "context_session_is_first",
+        "type": "String"
+      },
+      {
+        "name": "context_location_client_ip",
+        "type": "String"
+      },
+      {
+        "name": "context_location_continent",
+        "type": "String"
+      },
+      {
+        "name": "context_location_country",
+        "type": "String"
+      },
+      {
+        "name": "custom",
+        "type": "String"
+      }
+    ],
+    "published": false,
+    "type": "AzureSqlTable",
+    "linkedServiceName": "Destination-DatabaseCronodata",
+    "typeProperties": {
+      "tableName": "[dbo].[events_views]"
+    },
+    "availability": {
+      "frequency": "Hour",
+      "interval": 1
+    },
+    "external": false,
+    "policy": {}
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Table.json"
+}

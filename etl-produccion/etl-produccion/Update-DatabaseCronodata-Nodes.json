@@ -1,0 +1,45 @@
+{
+  "name": "Update-DatabaseCronodata-Nodes",
+  "properties": {
+    "activities": [
+      {
+        "type": "SqlServerStoredProcedure",
+        "typeProperties": {
+          "storedProcedureName": "dbo.update_action_nodes"
+        },
+        "inputs": [
+          {
+            "name": "OutputDataset-Events-Database"
+          },
+          {
+            "name": "OutputDataset-Pageviews-Database"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-Nodes-Database"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-UpdateNode-DatabaseCronodata"
+      }
+    ],
+    "start": "2017-01-21T00:00:00Z",
+    "end": "2017-01-27T23:00:00Z",
+    "isPaused": true,
+    "pipelineMode": "Scheduled"
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Pipeline.json"
+}

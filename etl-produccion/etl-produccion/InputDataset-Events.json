@@ -1,0 +1,105 @@
+{
+  "name": "InputDataset-Events",
+  "properties": {
+    "structure": [
+      {
+        "name": "event",
+        "type": "String"
+      },
+      {
+        "name": "context.data.eventTime",
+        "type": "String"
+      },
+      {
+        "name": "context.device.type",
+        "type": "String"
+      },
+      {
+        "name": "context.device.osVersion",
+        "type": "String"
+      },
+      {
+        "name": "context.device.deviceModel",
+        "type": "String"
+      },
+      {
+        "name": "context.device.browser",
+        "type": "String"
+      },
+      {
+        "name": "context.user.anonId",
+        "type": "String"
+      },
+      {
+        "name": "context.user.authId",
+        "type": "String"
+      },
+      {
+        "name": "context.user.isAuthenticated",
+        "type": "Boolean"
+      },
+      {
+        "name": "context.session.id",
+        "type": "String"
+      },
+      {
+        "name": "context.session.isFirst",
+        "type": "Boolean"
+      },
+      {
+        "name": "context.operation.id",
+        "type": "String"
+      },
+      {
+        "name": "context.location.clientip",
+        "type": "String"
+      },
+      {
+        "name": "context.location.continent",
+        "type": "String"
+      },
+      {
+        "name": "context.location.country",
+        "type": "String"
+      },
+      {
+        "name": "context.custom.dimensions",
+        "type": "String"
+      }
+    ],
+    "published": false,
+    "type": "AzureBlob",
+    "linkedServiceName": "Source-BlobCodere",
+    "typeProperties": {
+      "folderPath": "appinsightcsbgonline/csbgonline_06e1d45bf5bc462b8339a431d3d100f1/Event/{Fecha}/{Hour}/",
+      "format": {
+        "type": "JsonFormat"
+      },
+      "partitionedBy": [
+        {
+          "name": "Fecha",
+          "value": {
+            "type": "DateTime",
+            "date": "SliceStart",
+            "format": "yyyy-MM-dd"
+          }
+        },
+        {
+          "name": "Hour",
+          "value": {
+            "type": "DateTime",
+            "date": "SliceStart",
+            "format": "HH"
+          }
+        }
+      ]
+    },
+    "availability": {
+      "frequency": "Hour",
+      "interval": 1
+    },
+    "external": true,
+    "policy": {}
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Table.json"
+}

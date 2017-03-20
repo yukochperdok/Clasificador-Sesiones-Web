@@ -1,0 +1,10 @@
+{
+  "name": "Source-DatabaseCodere",
+  "properties": {
+    "type": "AzureSqlDatabase",
+    "typeProperties": {
+      "connectionString": "Data Source=twstubvmzj.database.secure.windows.net;Initial Catalog=OnlineInstrumentation;Integrated Security=False;User ID=onlineintrumentationuser;Password=**********;Connect Timeout=30;Encrypt=True"
+    }
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.LinkedService.json"
+}

@@ -1,0 +1,40 @@
+{
+  "name": "OutputDataset-sports",
+  "properties": {
+    "structure": [
+      {
+        "name": "NodeId",
+        "type": "Int16"
+      },
+      {
+        "name": "ParentId",
+        "type": "Int16"
+      },
+      {
+        "name": "Name",
+        "type": "String"
+      },
+      {
+        "name": "sportHandle",
+        "type": "String"
+      },
+      {
+        "name": "InsertDate",
+        "type": "Datetime"
+      }
+    ],
+    "published": false,
+    "type": "AzureSqlTable",
+    "linkedServiceName": "Destination-DatabaseCronodata",
+    "typeProperties": {
+      "tableName": "[dbo].[Sports]"
+    },
+    "availability": {
+      "frequency": "Hour",
+      "interval": 1
+    },
+    "external": false,
+    "policy": {}
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Table.json"
+}

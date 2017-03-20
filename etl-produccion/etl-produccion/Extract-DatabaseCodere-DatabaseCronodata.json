@@ -1,0 +1,270 @@
+{
+  "name": "Extract-DatabaseCodere-DatabaseCronodata",
+  "properties": {
+    "activities": [
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Sports] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Sports] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,sportHandle:sportHandle,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-sports"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-sports"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopySports-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Countries] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Countries] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-countries"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-countries"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopyCountries-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Leagues] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Leagues] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,sportHandle:sportHandle,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-leagues"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-leagues"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopyLeagues-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Events] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Events] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,startDate:startDate,sportHandle:sportHandle,InsertDate:InsertDate,islive:islive"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-eventsNode"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-eventsNode"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopyEvents-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Markets] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Markets] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,startDate:startDate,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-markets"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-markets"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopyMarkets-DatabaseCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "SqlSource",
+            "sqlReaderQuery": "$$Text.Format('select * from [dbo].[Results] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)"
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sqlWriterCleanupScript": "$$Text.Format('delete [dbo].[Results] where [InsertDate] >= \\'{0:yyyy-MM-dd HH:mm}\\' AND [InsertDate] < \\'{1:yyyy-MM-dd HH:mm}\\'', WindowStart, WindowEnd)",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "NodeId:NodeId,ParentId:ParentId,Name:Name,startDate:startDate,InsertDate:InsertDate"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-results"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-results"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopyResults-DatabaseCodere-DatabaseCronodata"
+      }
+    ],
+    "start": "2017-01-21T00:00:00Z",
+    "end": "2017-01-27T23:00:00Z",
+    "isPaused": true,
+    "pipelineMode": "Scheduled"
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Pipeline.json"
+}

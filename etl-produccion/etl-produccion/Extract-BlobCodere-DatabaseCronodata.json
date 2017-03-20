@@ -1,0 +1,98 @@
+{
+  "name": "Extract-BlobCodere-DatabaseCronodata",
+  "properties": {
+    "activities": [
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "BlobSource",
+            "recursive": false
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sliceIdentifierColumnName": "ColumnForADFUseOnly",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "event:action,context.data.eventTime:context_data_event_time,context.device.type:context_device_type,context.device.osVersion:context_device_os_version,context.device.deviceModel:context_device_model,context.device.browser:context_device_browser,context.user.anonId:context_user_anon_id,context.user.authId:context_user_auth_id,context.user.isAuthenticated:context_user_is_authenticated,context.session.id:context_session_id,context.session.isFirst:context_session_is_first,context.location.clientip:context_location_client_ip,context.location.continent:context_location_continent,context.location.country:context_location_country,context.custom.dimensions:custom"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-Events"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-Events"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopyEvent-BlobCodere-DatabaseCronodata"
+      },
+      {
+        "type": "Copy",
+        "typeProperties": {
+          "source": {
+            "type": "BlobSource",
+            "recursive": false
+          },
+          "sink": {
+            "type": "SqlSink",
+            "sliceIdentifierColumnName": "ColumnForADFUseOnly",
+            "writeBatchSize": 0,
+            "writeBatchTimeout": "00:00:00"
+          },
+          "translator": {
+            "type": "TabularTranslator",
+            "columnMappings": "view:action,context.data.eventTime:context_data_event_time,context.device.type:context_device_type,context.device.osVersion:context_device_os_version,context.device.deviceModel:context_device_model,context.device.browser:context_device_browser,context.user.anonId:context_user_anon_id,context.user.authId:context_user_auth_id,context.user.isAuthenticated:context_user_is_authenticated,context.session.id:context_session_id,context.session.isFirst:context_session_is_first,context.location.clientip:context_location_client_ip,context.location.continent:context_location_continent,context.location.country:context_location_country,context.custom.dimensions:custom"
+          }
+        },
+        "inputs": [
+          {
+            "name": "InputDataset-PageViews"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "OutputDataset-PageViews"
+          }
+        ],
+        "policy": {
+          "timeout": "1.00:00:00",
+          "concurrency": 1,
+          "executionPriorityOrder": "NewestFirst",
+          "style": "StartOfInterval",
+          "retry": 1,
+          "longRetry": 0,
+          "longRetryInterval": "00:00:00"
+        },
+        "scheduler": {
+          "frequency": "Hour",
+          "interval": 1
+        },
+        "name": "Activity-CopyPageView-BlobCodere-DatabaseCronodata"
+      }
+    ],
+    "start": "2017-01-21T00:00:00Z",
+    "end": "2017-01-27T23:00:00Z",
+    "isPaused": true,
+    "pipelineMode": "Scheduled"
+  },
+  "$schema": "http://datafactories.schema.management.azure.com/schemas/2015-09-01/Microsoft.DataFactory.Pipeline.json"
+}
