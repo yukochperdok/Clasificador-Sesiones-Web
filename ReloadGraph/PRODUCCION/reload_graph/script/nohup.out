@@ -1,0 +1,3 @@
+2017-02-05 13:11:25,411 main ERROR appender Failover has no parameter that matches element Failovers
+CONFIGURACION DE VARIABLES
+./reload_graph.sh: line 36: 53332 Killed                  $JAVA_HOME/bin/java -cp $DIR_JAR/$JAR_NAME:$PATH_LIB -DDIR_CONFIG=$DIR_CONFIG com.cronodata.ReloadGraph $OP >> $SCH_LOGFILE 2>&1

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration status="warn" name="PRODUCTION" packages="com.cronodata">
+
+	<Properties>
+		<!-- Path del directorio de salida de los logs -->
+		<Property name="path">$${env:RELOAD_GRAPH_OUT_LOGS}</Property>
+		<!-- Nombre del fichero de salida -->
+		<Property name="filename">reload_graph</Property>
+	</Properties>
+
+	<Appenders>
+		<!-- Salida estandar por consola -->
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{2} - %m%n" />
+		</Console>
+
+		<!-- Salida por fichero. Rotara por tamaño y por tiempo, con un maximo de 10 ficheros -->
+		<RollingFile name="RollingFile" append="true"
+			fileName="${path}${filename}.log" filePattern="${path}${filename}-%d{MM-dd-yyyy}-%i.log.gz"
+			immediateFlush="true">
+			<PatternLayout>
+				<Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c{2} %m%n</Pattern>
+			</PatternLayout>
+			<!-- Rotado cada 24h o 50Mb -->
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="24"
+					modulate="true" />
+				<SizeBasedTriggeringPolicy size="52428800" />
+			</Policies>
+			<DefaultRolloverStrategy max="10" />
+		</RollingFile>
+		
+		<!-- Como primer appender marco el fichero rotado, si falla se lanza por consola -->
+		<Failover name="Failover" primary="RollingFile">
+			<Failovers>
+				<AppenderRef ref="Console" />
+			</Failovers>
+		</Failover>
+
+	</Appenders>
+	
+	<!-- Defino un solo Logger, root que tendra un failappender para todo tipo de trazas -->
+	<Loggers>		
+		<Root level="ALL">
+			<AppenderRef ref="Failover" />
+		</Root>
+	</Loggers>
+</Configuration>

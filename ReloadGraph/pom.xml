@@ -1,0 +1,125 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>cronodata</groupId>
+	<artifactId>cronodata</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>ReloadGraph</name>
+	<description>Recarga diaria del grafo en Neo4j</description>
+	
+	<!-- Propiedades -->
+	<properties>
+		<project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
+		<project.name.jar>${project.artifactId}-${project.version}.jar</project.name.jar>
+		<project.dir.scripts>${project.basedir}/scripts</project.dir.scripts>
+		<project.dir.config>${project.basedir}/config</project.dir.config>
+		<remote.host>neo4j-virtual-machine.northeurope.cloudapp.azure.com</remote.host>
+		<remote.jar.name>reload_graph.jar</remote.jar.name>
+		<user.remote.host>cronodata</user.remote.host>
+		<dir.home.remote.host>/home/cronodata/reload_graph</dir.home.remote.host>
+		<dir.bin.remote.host>${dir.home.remote.host}/bin/</dir.bin.remote.host>
+		<dir.script.remote.host>${dir.home.remote.host}/script/</dir.script.remote.host>
+		<dir.config.remote.host>${dir.home.remote.host}/config/</dir.config.remote.host>
+	</properties>
+	<build>
+		<pluginManagement>
+			<plugins>
+			
+				<!-- Plugin para compilar -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+						<encoding>ISO-8859-1</encoding>
+					</configuration>
+				</plugin>
+				
+				<!-- Plugin para pasar el jar, los scripts y el properties al servidor neo4j -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>1.8</version>
+					<executions>
+						<execution>
+							<id>scp-to-remote</id>
+							<phase>package</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+								
+									<!-- Transferimos el jar al servidor de neo4j -->
+									<echo>Copiando BINARIO: ${project.build.directory}/${project.name.jar} a ${remote.host}</echo>
+									<scp localFile="${project.build.directory}/${project.name.jar}"
+										remoteToFile="${user.remote.host}@${remote.host}:${dir.bin.remote.host}${remote.jar.name}"
+										verbose="true" password="${password.remote.host}" trust="true" />
+									
+									<!-- Transferimos los sh y bash al servidor de neo4j -->
+									<echo>Copiando SCRIPTS: ${project.dir.scripts} a ${remote.host}</echo>	
+									<scp todir="${user.remote.host}@${remote.host}:${dir.script.remote.host}"
+										verbose="true" password="${password.remote.host}" trust="true">
+										<fileset dir="${project.dir.scripts}">
+											<include name="**/*.bash" />
+											<include name="**/*.sh" />
+										</fileset>
+									</scp>
+									
+									<!-- Transferimos el properties al servidor de neo4j -->
+									<echo>Copiando CONFIGURACION:${project.dir.scripts} a ${remote.host}</echo>	
+									<scp todir="${user.remote.host}@${remote.host}:${dir.config.remote.host}"
+										verbose="true" password="${password.remote.host}" trust="true">
+										<fileset dir="${project.dir.config}">
+											<include name="**/*.properties" />
+										</fileset>
+									</scp>
+								</target>
+							</configuration>
+						</execution>
+					</executions>
+					<dependencies>
+					
+						<!-- Para ejecutar un antrun necesitamos estos jar -->
+						<dependency>
+							<groupId>com.jcraft</groupId>
+							<artifactId>jsch</artifactId>
+							<version>0.1.53</version>
+						</dependency>
+						<dependency>
+							<groupId>ant</groupId>
+							<artifactId>ant-jsch</artifactId>
+							<version>1.6.5</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	
+	<!-- Dependencias con librerias:Neo4j, Log4j2 y SQLServer -->
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>sqljdbc4.2</artifactId>
+			<version>4.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.neo4j.driver</groupId>
+			<artifactId>neo4j-java-driver</artifactId>
+			<version>1.0.6</version>
+		</dependency>
+	</dependencies>
+</project>
